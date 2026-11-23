@@ -417,7 +417,7 @@ body.offline .offBanner{display:block}
   <canvas id="sig"></canvas>
   <div style="display:flex;justify-content:flex-end"><button class="btn sec peq" id="limparSig">Limpar assinatura</button></div>
   <div class="status" id="stFinal"></div>
-  <button class="btn" id="btnFinal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Finalizar viagem e gerar PDF</button>
+  <button class="btn" id="btnFinal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Finalizar viagem e enviar PDF</button>
   <button class="btn sec" id="btnPrevia">Baixar PDF parcial (sem finalizar)</button>
   <button class="btn verm" id="btnDescartar">Descartar esta vistoria</button>
 </div>
@@ -534,6 +534,14 @@ body.offline .offBanner{display:block}
   <div class="status" id="stPrev"></div>
   <button class="btn" id="pvSalvar">Salvar previsão</button>
   <button class="btn verm" id="pvCancelar">Cancelar</button>
+</div></div>
+
+<div class="modalBg" id="mFinal"><div class="modal">
+  <h3><span class="n">✅</span><span id="fnTit">Viagem finalizada</span></h3>
+  <div class="hint" id="fnInfo" style="margin:0 0 10px;font-size:14px;line-height:1.5"></div>
+  <button class="btn" id="fnBaixar">Baixar o PDF neste celular</button>
+  <button class="btn sec" id="fnDrive" style="display:none">Abrir no Google Drive</button>
+  <button class="btn sec" id="fnFechar">Fechar</button>
 </div></div>
 
 <div class="modalBg" id="mAvisos"><div class="modal">
@@ -1645,17 +1653,19 @@ $('btnFinal').onclick=async()=>{
     await sincroniza();                                    // pega o que os outros celulares mandaram
     V.status='finalizada'; V.finalizadaEm=new Date().toLocaleString('pt-BR'); V.finalizadaPor=SESS.usuario.nome;
     const {doc,nome}=await montaPDF(V,false);
-    try{ doc.save(nome); }catch(e){}
     const item={v:limpo(V),sujos:Object.assign({},V._sujos,{status:1,finalizadaEm:1,finalizadaPor:1}),nome};
+    let fim;
     try{
       const r=await api('finalizar',{v:item.v,sujos:item.sujos,pdf:doc.output('datauristring'),nome});
-      toast('Viagem finalizada! PDF salvo no Google Drive.',4000);
+      const para=(r.emailPara||[]);
+      fim={tit:'Viagem finalizada',txt:'O PDF foi salvo no Google Drive'+(para.length?' e <b>enviado por e-mail</b> para '+esc(para.join(', '))+'.':'.')+'<br>Se preferir, baixe também neste celular.',url:r.pdfUrl};
     }catch(e){
       if(!semRede(e)) throw e;
       FILA.push(item); LS.set('vcp_fila',FILA);
-      toast('Sem internet: a finalização será enviada automaticamente quando voltar o sinal.',5000);
+      fim={tit:'Finalizada sem internet',txt:'A finalização fica guardada neste celular e será enviada automaticamente quando voltar o sinal. O e-mail com o PDF sai nessa hora.<br>Se precisar agora, baixe o PDF neste celular.'};
     }
     V=null; persist(); stOff($('stFinal')); await irHome(true);
+    mostraFinal(fim,doc,nome);
   }catch(e){ V.status='andamento'; st($('stFinal'),'Erro: '+e.message,'erro'); }
   finally{ $('btnFinal').disabled=false; }
 };
@@ -1669,6 +1679,13 @@ async function processaFila(){
     }catch(e){ if(semRede(e)) return; FILA=FILA.filter(x=>x!==item); LS.set('vcp_fila',FILA); toast('Erro ao enviar viagem pendente: '+e.message,5000); }
   }
 }
+function mostraFinal(f,doc,nome){
+  $('fnTit').textContent=f.tit; $('fnInfo').innerHTML=f.txt;
+  $('fnBaixar').onclick=()=>{ try{ doc.save(nome); }catch(e){ toast('Não foi possível baixar: '+e.message,4000); } };
+  $('fnDrive').style.display=f.url?'':'none'; $('fnDrive').onclick=()=>window.open(f.url,'_blank');
+  $('mFinal').classList.add('on');
+}
+$('fnFechar').onclick=()=>$('mFinal').classList.remove('on');
 $('btnPrevia').onclick=async()=>{ try{const {doc,nome}=await montaPDF(V,true); doc.save(nome);}catch(e){st($('stFinal'),'Erro ao gerar PDF: '+e.message,'erro');} };
 $('btnDescartar').onclick=async()=>{
   if(!confirmar('Descartar esta vistoria? Ela some para todos os celulares.')) return;
