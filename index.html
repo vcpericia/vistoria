@@ -221,7 +221,9 @@ body.emForm .topo .voltar{display:grid}
 .veic.uso svg.ic{color:var(--laranja)}
 .veic h4{margin:0;font-size:16px;font-weight:800;letter-spacing:.03em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .chip{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.02em}
-.chip.ok{background:#E8F6EE;color:var(--ok)}.chip.atr{background:#FDECEA;color:#C0392B}
+.chip.ok{background:#E8F6EE;color:var(--ok)}.chip.ind{background:#ECEEF2;color:#5B6573}.cB{background:#EDEFF3;color:#5B6573;border:1.5px dashed #AEB6C1!important}
+.indInfo{grid-column:1/-1;margin-top:6px;font-size:12.5px;line-height:1.45;background:#F4F5F7;border-left:3px solid #8A94A3;border-radius:8px;padding:7px 10px;color:var(--txt)}
+.admLnk{grid-column:1/-1;margin-top:6px;font-size:12px;text-align:right}.admLnk button{border:0;background:none;color:var(--sub);font-weight:700;font-size:12px;padding:2px 0;cursor:pointer;text-decoration:underline}.chip.atr{background:#FDECEA;color:#C0392B}
 .resInfo{font-size:12.5px;color:var(--sub);background:#F4F7FB;border-radius:12px;padding:9px 11px;margin:8px 0 2px;line-height:1.5;display:none}.resInfo.on{display:block}
 .semNav{display:flex;align-items:center;gap:10px;margin:4px 0 10px}.semNav>div{flex:1;text-align:center}.semNav b{display:block;font-size:15px}.semNav .btn{width:44px;flex:0 0 44px;padding:9px 0;font-size:20px}.semNav .lnk{border:0;background:none;color:var(--laranja);font-weight:800;font-size:12px;cursor:pointer}
 .agLeg{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.agLeg span{font-size:11px;font-weight:700;border-radius:20px;padding:3px 9px}
@@ -321,6 +323,9 @@ input:focus,select:focus,textarea:focus{background-color:#1B222B}
 .veic{background-color:#1B222B;border:1px solid #3A4451}
 .veic svg.ic{color:#E6EAF0}
 .chip.ok{background-color:#1C3F2B}
+.chip.ind{background-color:#232B35;color:#AEB6C1}
+.cB{background-color:#232B35;color:#AEB6C1;border:1.5px dashed #3A4451!important}
+.indInfo{background-color:#232B35}
 .chip.atr{background-color:#3F201C;color:#FF8A7A}
 .resInfo{background-color:#232B35}
 .cR{background-color:#1C293F;color:#8AB4F8}
@@ -525,7 +530,7 @@ input:focus,select:focus,textarea:focus{background-color:#1B222B}
   <div class="card">
     <h2><span class="n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" style="width:14px;height:14px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>Agenda da frota</h2>
     <div class="semNav"><button class="btn sec" id="agAnt">‹</button><div><b id="agTit">—</b><button class="lnk" id="agHoje">Esta semana</button></div><button class="btn sec" id="agProx">›</button></div>
-    <div class="agLeg"><span class="cR">Reserva</span><span class="cV">Em viagem</span><span class="cA">Volta atrasada</span><span class="cF">Viagem feita</span></div>
+    <div class="agLeg"><span class="cR">Reserva</span><span class="cV">Em viagem</span><span class="cA">Volta atrasada</span><span class="cF">Viagem feita</span><span class="cB">Indisponível</span></div>
     <div class="agWrap"><table class="agTab" id="agTab"></table></div>
     <div class="hint">Toque num espaço <b>livre</b> para reservar o carro naquele dia. Toque num item para ver os detalhes.</div>
   </div>
@@ -605,6 +610,19 @@ input:focus,select:focus,textarea:focus{background-color:#1B222B}
 
 
 <!-- Modal reserva de veículo (Google Agenda) -->
+<div class="modalBg" id="mInd"><div class="modal">
+  <h3><span class="n">🔧</span>Veículo indisponível · <span id="indVeic"></span></h3>
+  <div class="hint" style="margin:0 0 4px">Enquanto estiver indisponível, ninguém consegue reservar nem iniciar vistoria deste veículo (administradores conseguem, por exemplo para levar à oficina).</div>
+  <label>Motivo</label><select id="indMot"><option>Oficina / manutenção</option><option>Funilaria / sinistro</option><option>Documentação</option><option>Sem uso</option><option>Outro</option></select>
+  <div class="row"><div><label>A partir de</label><input type="date" id="indD1"></div><div><label>Hora</label><input type="time" id="indH1"></div></div>
+  <div class="row"><div><label>Liberação prevista</label><input type="date" id="indD2"></div><div><label>Hora</label><input type="time" id="indH2" value="18:00"></div></div>
+  <label class="chk" style="margin-top:10px!important"><input type="checkbox" id="indSem"> Sem previsão de liberação</label>
+  <label>Observação</label><input id="indObs" placeholder="Ex.: Oficina do João, troca de embreagem">
+  <div class="status" id="stInd"></div>
+  <button class="btn" id="indSalvar">Marcar como indisponível</button>
+  <button class="btn sec" id="indCancelar">Cancelar</button>
+</div></div>
+
 <div class="modalBg" id="mReserva"><div class="modal">
   <h3><span class="n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>Reservar veículo</h3>
   <label>Veículo</label><select id="rsVeic"></select>
@@ -1815,11 +1833,11 @@ function renderHome(){
   $('pendLocal').innerHTML=h; if($('btnCont')) $('btnCont').onclick=()=>abrirForm();
   const veics=(INI&&INI.veiculos)||['GOL','SAVEIRO','RANGER'];
   $('frota').innerHTML=veics.map(vc=>{
-    const ab=abertaDe(vc); const nav=avariasDe(vc).length; const rs=reservasDe(vc); const rHoje=reservaAgora(vc);
+    const ab=abertaDe(vc); const nav=avariasDe(vc).length; const rs=reservasDe(vc); const rHoje=reservaAgora(vc); const ind=indAgora(vc), indF=indDe(vc).filter(b=>b!==ind)[0];
     return `<div class="veic ${ab?'uso':''}"><svg class="ic"><use href="${icVeic(vc)}"/></svg>
-      <h4>${vc} ${ab?(ab.atrasada?'<span class="chip atr">Volta atrasada</span>':'<span class="chip uso">Em viagem</span>'):(rHoje?'<span class="chip res">Reservado hoje</span>':'<span class="chip ok">Disponível</span>')}</h4>
-      <div class="info">${ab?`Com <b>${esc(ab.motoristaAtual||ab.motorista)}</b> desde ${esc(ab.saidaData)} ${esc(ab.saidaHora)}${ab.destino?' · '+esc(String(ab.destino).slice(0,40)):''}${ab.previsaoVolta?` · volta ${ab.atrasada?'era':'prevista'} ${esc(fmtDH(ab.previsaoVolta))}`:''}`:'Pronto para sair'} · ${nav} avaria${nav===1?'':'s'} cadastrada${nav===1?'':'s'}</div>
-      <div class="bts">${ab?`<button class="btn" data-abrir="${ab.id}">Abrir viagem</button>${SESS.usuario.admin?`<button class="btn verm" style="flex:0 0 auto;width:auto;padding:11px 12px" data-cancelar="${ab.id}" data-v="${vc}">Descartar</button>`:''}`:`<button class="btn" data-nova="${vc}">Iniciar vistoria</button>`}<button class="btn sec" data-reservar="${vc}" style="flex:0 0 auto;width:auto;padding:11px 12px">Reservar</button><button class="btn sec" data-frota="${vc}">Avarias</button></div>${rs.length?`<div class="resv">📅 ${rs.slice(0,2).map(r=>`${esc(fmtPer(r))} · ${esc(primeiro(r.motorista||r.reservadoPor))}${r.servico?' · '+esc(r.servico):''}`).join('<br>📅 ')}</div>`:''}</div>`;
+      <h4>${vc} ${ab?(ab.atrasada?'<span class="chip atr">Volta atrasada</span>':'<span class="chip uso">Em viagem</span>'):(ind?'<span class="chip ind">🔧 Indisponível</span>':rHoje?'<span class="chip res">Reservado hoje</span>':'<span class="chip ok">Disponível</span>')}</h4>
+      <div class="info">${ab?`Com <b>${esc(ab.motoristaAtual||ab.motorista)}</b> desde ${esc(ab.saidaData)} ${esc(ab.saidaHora)}${ab.destino?' · '+esc(String(ab.destino).slice(0,40)):''}${ab.previsaoVolta?` · volta ${ab.atrasada?'era':'prevista'} ${esc(fmtDH(ab.previsaoVolta))}`:''}`:ind?'Não disponível para uso':'Pronto para sair'} · ${nav} avaria${nav===1?'':'s'} cadastrada${nav===1?'':'s'}</div>
+      <div class="bts">${ab?`<button class="btn" data-abrir="${ab.id}">Abrir viagem</button>${SESS.usuario.admin?`<button class="btn verm" style="flex:0 0 auto;width:auto;padding:11px 12px" data-cancelar="${ab.id}" data-v="${vc}">Descartar</button>`:''}`:ind&&!u.admin?`<button class="btn" disabled>Indisponível</button>`:`<button class="btn" data-nova="${vc}">Iniciar vistoria</button>`}<button class="btn sec" data-reservar="${vc}" style="flex:0 0 auto;width:auto;padding:11px 12px">Reservar</button><button class="btn sec" data-frota="${vc}">Avarias</button></div>${rs.length?`<div class="resv">📅 ${rs.slice(0,2).map(r=>`${esc(fmtPer(r))} · ${esc(primeiro(r.motorista||r.reservadoPor))}${r.servico?' · '+esc(r.servico):''}`).join('<br>📅 ')}</div>`:''}${ind?`<div class="indInfo">🔧 <b>${esc(ind.motivo)}</b> · ${esc(perInd(ind))}${ind.obs?'<br>'+esc(ind.obs):''}</div>`:''}${indF?`<div class="indInfo">🔧 Ficará indisponível: <b>${esc(indF.motivo)}</b> · ${esc(perInd(indF))}</div>`:''}${u.admin?`<div class="admLnk">${ind||indF?`<button data-liberar="${esc((ind||indF).id)}" data-v="${vc}">${ind?'Liberar o veículo agora':'Cancelar a indisponibilidade'}</button>`:`<button data-ind="${vc}">🔧 Marcar como indisponível</button>`}</div>`:''}</div>`;
   }).join('');
   pintaReservas();
   const rec=(INI&&INI.recentes||[]).slice(0,5);
@@ -1832,6 +1850,9 @@ const itemHist = r => `<div class="item"><div class="t">${esc(r.veiculo)} · ${e
 $('frota').addEventListener('click',async e=>{ const d=e.target.dataset;
   if(d.cancelar){ const ab=abertaDe(d.v); if(!confirmar(`Descartar a viagem do ${d.v}${ab?' iniciada por '+(ab.motorista||'?')+' em '+ab.saidaData+' '+ab.saidaHora:''}? Ela some da planilha e o veículo volta a ficar disponível.`)) return;
     try{ await api('descartar',{id:d.cancelar}); toast('Viagem descartada'); if(V&&V.id===d.cancelar){V=null;persist();} await carregaInicio(); renderHome(); }catch(err){ toast('Erro: '+err.message,4000); } return; }
+  if(d.ind) abreInd(d.ind);
+  if(d.liberar){ const b=indDe(d.v).find(x=>x.id===d.liberar); if(!confirmar(b&&b.de<=agoraISO()?`Liberar o ${d.v} agora? Ele volta a ficar disponível para reservas e vistorias.`:`Cancelar a indisponibilidade programada do ${d.v}?`)) return;
+    try{ await api('liberarVeiculo',{id:d.liberar}); toast(`${d.v} liberado ✔`); await carregaInicio(); renderHome(); }catch(err){ toast('Erro: '+err.message,4000); } return; }
   if(d.nova) novaVistoria(d.nova); if(d.abrir) abrirRemota(d.abrir); if(d.frota) abreFrota(d.frota); });
 document.addEventListener('click',async e=>{ const id=e.target.dataset&&e.target.dataset.pdfid; if(!id) return;
   try{ toast('Gerando PDF…'); const r=await api('obter',{id}); const {doc,nome}=await montaPDF(r.vistoria,false); doc.save(nome); }catch(err){ toast('Não foi possível gerar: '+err.message,4000); } });
@@ -1932,6 +1953,7 @@ function itensAgenda(){
   reservasTodas().forEach(r=>{ if(reservasComViagem.has(r.id)) return; it.push({tipo:'R',veic:r.veiculo,ini:r.inicio,fim:r.fim,quem:r.motorista||r.reservadoPor,txt:(r.servico?r.servico+' - ':'')+(r.motivo||r.titulo||''),r}); });
   ab.forEach(a=>{ const ini=brParaISO(a.saidaData)+'T'+(a.saidaHora||'00:00'); const fim=a.atrasada?agoraISO():(a.previsaoVolta||agoraISO());
     it.push({tipo:a.atrasada?'A':'V',veic:a.veiculo,ini,fim:fim<ini?ini:fim,quem:a.motoristaAtual||a.motorista,txt:a.destino||'',a}); });
+  ((INI&&INI.indisponiveis)||[]).forEach(b=>{ it.push({tipo:'B',veic:b.veiculo,ini:b.de,fim:b.ate||'9999-12-31T23:59',quem:b.motivo,txt:b.obs||'',b}); });
   ((INI&&INI.recentes)||[]).forEach(v=>{ const ini=brParaISO(v.saidaData)+'T'+(v.saidaHora||'00:00'); const fim=(brParaISO(v.voltaData)||brParaISO(v.saidaData))+'T23:59';
     it.push({tipo:'F',veic:v.veiculo,ini,fim,quem:v.motorista,txt:v.destino||'',v}); });
   return it;
@@ -1942,7 +1964,7 @@ function pintaAgenda(){
   const fimS=dias[6]; const mes=d=>MESES[d.getMonth()];
   $('agTit').textContent=`${dias[0].getDate()} ${dias[0].getMonth()!==fimS.getMonth()?mes(dias[0])+' ':''}a ${fimS.getDate()} de ${mes(fimS)} de ${fimS.getFullYear()}`;
   const veics=(INI&&INI.veiculos)||['GOL','SAVEIRO','RANGER']; const its=itensAgenda(); const hoje=isoDia(new Date());
-  const cls={R:'cR',V:'cV',A:'cA',F:'cF'}, nome={R:'Reserva',V:'Em viagem',A:'Atrasada',F:'Viagem'};
+  const cls={R:'cR',V:'cV',A:'cA',F:'cF',B:'cB'}, nome={R:'Reserva',V:'Em viagem',A:'Atrasada',F:'Viagem'};
   let h='<tr><th class="d"></th>'+veics.map(v=>`<th style="background:${COR_VEIC[v]||'#888'}">${esc(v)}</th>`).join('')+'</tr>';
   window.__agItens=its;
   dias.forEach(d=>{ const di=isoDia(d);
@@ -1950,7 +1972,7 @@ function pintaAgenda(){
     veics.forEach(v=>{ const no=its.filter(x=>x.veic===v&&x.ini.slice(0,10)<=di&&x.fim.slice(0,10)>=di);
       h+='<td>'+(no.length?no.map(x=>{ const i=its.indexOf(x); const ini=x.ini.slice(0,10)===di?x.ini.slice(11,16):'', fim=x.fim.slice(0,10)===di&&x.tipo!=='F'?x.fim.slice(11,16):'';
         const hr=ini&&fim?`${ini}–${fim}`:ini?`desde ${ini}`:fim?`até ${fim}`:'dia todo';
-        return `<button class="agI ${cls[x.tipo]}" data-agi="${i}">${esc(primeiro(x.quem))}<small>${x.tipo==='F'?nome.F:hr}${x.txt?' · '+esc(String(x.txt).slice(0,28)):''}</small></button>`; }).join('')
+        return `<button class="agI ${cls[x.tipo]}" data-agi="${i}">${x.tipo==='B'?'🔧 '+esc(x.quem):esc(primeiro(x.quem))}<small>${x.tipo==='F'?nome.F:hr}${x.txt?' · '+esc(String(x.txt).slice(0,28)):''}</small></button>`; }).join('')
         :(di>=hoje?`<button class="agLivre" data-aglivre="${esc(v)}" data-dia="${di}">livre</button>`:''))+'</td>'; });
     h+='</tr>'; });
   $('agTab').innerHTML=h;
@@ -1964,6 +1986,7 @@ $('agTab').addEventListener('click',e=>{ const b=e.target.closest('button'); if(
   if(b.dataset.aglivre){ abreReserva(b.dataset.aglivre,b.dataset.dia); return; }
   const x=(window.__agItens||[])[+b.dataset.agi]; if(!x) return; const f=s=>fmtDH(s);
   if(x.tipo==='R'){ const r=x.r; toast(`${r.veiculo} reservado de ${f(r.inicio)} a ${f(r.fim)} · ${r.motorista||r.reservadoPor||''}${r.acompanhante?' e '+r.acompanhante:''}${r.servico?' · '+r.servico:''} ${r.motivo||''}${r.destino?' · '+r.destino:''}`,6000); }
+  else if(x.tipo==='B'){ const b=x.b; toast(`${b.veiculo} indisponível · ${b.motivo} · ${perInd(b)}${b.obs?' · '+b.obs:''}`,6000); }
   else if(x.tipo==='F'){ const v=x.v; toast(`${v.veiculo} · ${v.saidaData} → ${v.voltaData} · ${v.motorista}${v.acompanhante?' e '+v.acompanhante:''}${v.destino?' · '+v.destino:''}${v.kmRodados?' · '+fmtKm(v.kmRodados)+' km':''}`,6000); }
   else { const a=x.a; toast(`${a.veiculo} em viagem com ${a.motoristaAtual||a.motorista} desde ${a.saidaData} ${a.saidaHora}${a.previsaoVolta?' · volta prevista '+f(a.previsaoVolta):''}${a.atrasada?' (atrasada)':''}`,6000); }
 });
@@ -2049,7 +2072,9 @@ async function novaVistoria(veic){
   if(V && V.id){ if(pendente()) { await sincroniza(); }
     if(V && V.status==='andamento' && !confirmar(`Este celular está com a vistoria do ${V.veiculo} aberta. Fechar e iniciar a do ${veic}? (A do ${V.veiculo} continua salva no servidor.)`)) return;
     if(V && V.status==='rascunho' && !confirmar(`Há um rascunho de vistoria do ${V.veiculo} neste celular. Descartar e começar a do ${veic}?`)) return; }
-  const d=new Date(); const u=SESS.usuario; const rv=reservaAgora(veic);
+  const d=new Date(); const u=SESS.usuario; const rv=reservaAgora(veic); const ind=indAgora(veic);
+  if(ind && !u.admin){ toast(`O ${veic} está indisponível (${ind.motivo}) ${perInd(ind)}. Fale com um administrador.`,6000); return; }
+  if(ind && !confirmar(`O ${veic} está marcado como indisponível (${ind.motivo}). Iniciar a vistoria mesmo assim (ex.: levar à oficina)?`)) return;
   if(rv && ![rv.motorista,rv.acompanhante,rv.reservadoPor].includes(u.nome) && !confirmar(`O ${veic} está reservado ${fmtPer(rv)} para ${rv.motorista||rv.reservadoPor}${rv.destino?' ('+rv.destino+')':''}. Iniciar a vistoria mesmo assim?`)) return;
   V={ id:uid(), status:'rascunho', veiculo:veic, motorista:(rv&&rv.motorista)||u.nome, acompanhante:(rv&&rv.acompanhante)||'', reservaId:rv?rv.id:'', objetivo:(rv&&rv.objetivo)||'', equipamentos:(rv&&rv.equipamentos)||'',
     saida:{data:hojeISO(d),hora:horaAgora(d),km:'',destino:rv?[rv.servico?rv.servico+' - '+(rv.motivo||''):rv.motivo,rv.destino].filter(Boolean).join(' · '):''}, itens:{}, obs:{direito:'',esquerdo:'',dianteira:'',traseira:'',superior:''},
@@ -2079,6 +2104,7 @@ $('btnConfirmar').onclick=async()=>{
     await carregaInicio();
     const ab=abertaDe(V.veiculo);
     if(ab){ toast(`O ${V.veiculo} já está em viagem com ${ab.motoristaAtual||ab.motorista}. Fale com ele ou com um administrador.`,6000); return; }
+    const ind=indAgora(V.veiculo); if(ind&&!SESS.usuario.admin){ toast(`O ${V.veiculo} está indisponível (${ind.motivo}). Fale com um administrador.`,6000); return; }
     V.status='andamento'; V.versao=0; V._sujos={}; persist();
     document.body.classList.remove('rascunho'); setSync('env','Enviando…'); await sincroniza();
     toast('Viagem iniciada! O veículo agora aparece como "Em viagem".',3500);
@@ -2334,6 +2360,36 @@ async function abreQR(){
   }
   await novaVistoria(v); if(V&&V.veiculo===v&&V.status==='rascunho'){ marcaCheckin('checkinQR'); toast('📷 '+v+': vistoria de saída iniciada pelo QR Code.',3500); }
 }
+
+/* =================== veículo indisponível =================== */
+const indDe=v=>((INI&&INI.indisponiveis)||[]).filter(b=>b.veiculo===v&&(!b.ate||b.ate>agoraISO()));
+const indAgora=v=>indDe(v).find(b=>b.de<=agoraISO())||null;
+const dhBr=x=>x?x.slice(8,10)+'/'+x.slice(5,7)+(x.slice(0,4)!==String(new Date().getFullYear())?'/'+x.slice(0,4):'')+' '+x.slice(11,16):'';
+const perInd=b=>(b.de>agoraISO()?'de '+dhBr(b.de)+' ':'')+(b.ate?'até '+dhBr(b.ate):'sem previsão de liberação');
+function abreInd(v){
+  $('indVeic').textContent=v; $('indVeic').dataset.v=v; const d=new Date();
+  $('indD1').value=hojeISO(d); $('indH1').value=horaAgora(d); $('indD2').value=''; $('indH2').value='18:00'; $('indSem').checked=false; $('indObs').value='';
+  $('indD2').disabled=$('indH2').disabled=false; stOff($('stInd')); $('indSalvar').style.display=''; $('indCancelar').textContent='Cancelar'; $('mInd').classList.add('on');
+}
+$('indSem').onchange=()=>{ $('indD2').disabled=$('indH2').disabled=$('indSem').checked; };
+$('indCancelar').onclick=()=>$('mInd').classList.remove('on');
+$('indSalvar').onclick=async()=>{
+  const v=$('indVeic').dataset.v, de=$('indD1').value+'T'+($('indH1').value||'00:00');
+  if(!$('indD1').value){ st($('stInd'),'Informe a data de início.','erro'); return; }
+  if(!$('indSem').checked && !$('indD2').value){ st($('stInd'),'Informe a liberação prevista ou marque "sem previsão".','erro'); return; }
+  const ate=$('indSem').checked?'':$('indD2').value+'T'+($('indH2').value||'18:00');
+  $('indSalvar').disabled=true; st($('stInd'),'Salvando…','info');
+  try{
+    const r=await api('indisponivel',{veiculo:v,de,ate,motivo:$('indMot').value,obs:$('indObs').value});
+    await carregaInicio(); renderHome();
+    const av=[];
+    if(r.emViagem) av.push(`O ${v} está em viagem agora: a indisponibilidade não interrompe a viagem.`);
+    if(r.conflitos&&r.conflitos.length) av.push('Há '+r.conflitos.length+' reserva(s) nesse período. Avise os motoristas ou cancele as reservas:<br>'+r.conflitos.map(c=>'• '+esc(fmtDH(c.inicio))+' → '+esc(fmtDH(c.fim))+' · '+esc(c.motorista||'?')+(c.servico?' · '+esc(c.servico):'')).join('<br>'));
+    if(av.length){ st($('stInd'),'','ok'); $('stInd').innerHTML='✔ '+esc(v)+' marcado como indisponível.<br><br>⚠ '+av.join('<br><br>⚠ '); $('indSalvar').style.display='none'; $('indCancelar').textContent='Fechar'; }
+    else { $('mInd').classList.remove('on'); toast(`${v} marcado como indisponível ✔`); }
+  }catch(e){ st($('stInd'),semRede(e)?'Sem internet: tente quando tiver sinal.':'Erro: '+e.message,'erro'); }
+  finally{ $('indSalvar').disabled=false; }
+};
 
 /* =================== TUTORIAL (primeiro acesso) =================== */
 let TUT_I=0;
