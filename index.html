@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1F2630">
+<meta name="color-scheme" content="light dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -261,6 +262,83 @@ body.emForm .topo .voltar{display:grid}
 .av button.on{background:var(--ok);border-color:var(--ok);color:#fff}
 .offBanner{display:none;background:#FCEDEA;color:var(--erro);font-size:12.5px;font-weight:600;padding:8px 14px;text-align:center}
 body.offline .offBanner{display:block}
+</style>
+<style>
+/* modo escuro (gerado por tools/escuro.py) */
+@media (prefers-color-scheme:dark){
+:root{--fundo:#12171D;--borda:#323B47;--txt:#E6EAF0;--sub:#9AA4B2;--branco:#1B222B;--laranjaClaro:#3A2A18;--sombra:0 1px 2px rgba(0,0,0,.3)}
+html{color-scheme:dark}
+.card,.veic,.modal,.item,.kpi{border-color:#2A323D}
+input::placeholder,textarea::placeholder{color:#6F7A88}
+#grafico svg line[stroke="#E6E9EE"]{stroke:#2E3743}
+[style*="background:#FFF6F5"]{background-color:#2B1F20!important}
+[style*="background:#FFF4E6"]{background-color:#3A2A18!important;color:#E6EAF0!important}
+[style*="color:var(--escuro)"]{color:#E6EAF0!important}
+.rodape svg{color:#AEB6C1!important}
+.veic svg.ic{color:#C9D0D9}
+#sig{background:#fff}
+#tut .tSig{color:#9DB8F0}
+.card{background-color:#1B222B;border:1px solid #3A4451}
+.card h2{color:#E6EAF0}
+.card h2 .tag{color:#F5A04A}
+input,select,textarea{background-color:#232B35}
+input:focus,select:focus,textarea:focus{background-color:#1B222B}
+.veiculos button{background-color:#1B222B}
+.veiculos button.sel{color:#F5A04A}
+.sn{border-bottom:1px solid #3A4451}
+.seg{background-color:#232B35}
+.tools button{background-color:#1B222B}
+.gaugeBtns{background-color:#232B35}
+.pneu:has(input:checked){background-color:#1C3F2A}
+.btn.sec{background-color:#1B222B;color:#E6EAF0;border:1.5px solid #AEB6C1}
+.btn.verm{background-color:#1B222B;border:1.5px solid #3A4451}
+.item{background-color:#1B222B}
+.item .acts button,.item .acts a{background-color:#1B222B}
+.status.info{background-color:#232B35;color:#E6EAF0}
+.status.erro{background-color:#3F221C}
+.status.ok{background-color:#1C3F2B}
+.kmRod{color:#F5A04A}
+.modal{background-color:#1B222B}
+.modal:before{background-color:#1C2B3F}
+.modal h3{color:#E6EAF0}
+.rascBox b{color:#F5A04A}
+.campoErro{background-color:#3F211C !important}
+.foto{border:1.5px dashed #3A4451;background-color:#232B35}
+.foto.ok{background-color:#1C3F2A}
+.foto .fimg{background-color:#1C2C3F}
+.kpi{background-color:#232B35;border:1px solid #3A4451}
+.tab td{border-bottom:1px solid #3A4451}
+.gLbl b{color:#F5A04A}
+#tut{background-color:#1B222B}
+#tut .tIc{background-color:#3F2E1C}
+#tut p{color:#B8C0CB}
+#tut .tMini{background-color:#232B35}
+#tut .tIn{background-color:#1B222B}
+#tut .tBt.sec{background-color:#1B222B;color:#E6EAF0;border:1.5px solid #AEB6C1}
+#tut .tSig{color:#9DB8F0;border-bottom:1.5px dashed #3A4451}
+#tut .tDots i{background-color:#1C2B3F}
+.ola button{background-color:#1B222B}
+.veic{background-color:#1B222B;border:1px solid #3A4451}
+.veic svg.ic{color:#E6EAF0}
+.chip.ok{background-color:#1C3F2B}
+.chip.atr{background-color:#3F201C;color:#FF8A7A}
+.resInfo{background-color:#232B35}
+.cR{background-color:#1C293F;color:#8AB4F8}
+.cV{background-color:#3F301C;color:#F5A04A}
+.cA{background-color:#3F201C;color:#FF8A7A}
+.cF{background-color:#232B35;color:#AEB6C1}
+.agTab td{background-color:#232B35}
+.agTab td.dia b{color:#E6EAF0}
+.agLivre{border:1.5px dashed #3A4451}
+.prevV.atr{color:#FF8A7A}
+.chip.res{background-color:#1C293F;color:#8AB4F8}
+.resv{border-top:1px dashed #3A4451}
+.chip.uso{color:#F5A04A}
+.veicFixo{color:#F5A04A}
+.av{background-color:#1B222B}
+.av button{background-color:#1B222B}
+.offBanner{background-color:#3F221C}
+}
 </style>
 </head>
 <body>
@@ -2263,9 +2341,10 @@ function slidesTutorial(){
   const nome=primeiro(SESS&&SESS.usuario&&SESS.usuario.nome||'');
   const inst=instalado()?'<div class="l">✅ Você já está usando o app instalado.</div>':
     '<div class="l"><b>Dica:</b> instale o app na tela inicial</div><span class="s">'+(ehIOS()?'iPhone (Safari): Compartilhar ⬆ → <b>Adicionar à Tela de Início</b>':'Android (Chrome): menu ⋮ → <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>')+'</span>';
-  const av=avisosAtivos()?'<div class="l">✅ Os avisos já estão ativos neste celular.</div>':'<div class="l">🔔 Amanhã: RANGER às 07:00</div><span class="s">29951 – Avaliação da fazenda São Francisco</span><div class="tBt" id="tAtivar">Ativar avisos agora</div>';
+  const av=avisosAtivos()?'<div class="l" style="margin-top:12px">✅ Os avisos já estão ativos neste celular.</div>':'<div class="l" style="margin-top:12px">🔔 Amanhã: RANGER às 07:00</div><span class="s">29951 – Avaliação da fazenda São Francisco</span><div class="tBt" id="tAtivar">Ativar avisos agora</div>';
+  const resumo='<div class="l">📅 Reservar o carro</div><div class="l">📷 Vistoria de saída</div><div class="l">⛽ Abastecimentos na viagem</div><div class="l" style="margin-bottom:0">✅ Volta, assinatura e PDF</div>';
   return [
-    ['👋','Bem-vindo'+(nome?', '+esc(nome):'')+'!','Em 1 minuto você aprende o básico do app da frota VCP.',inst],
+    ['👋','Bem-vindo'+(nome?', '+esc(nome):'')+'!','Em 1 minuto você aprende o básico do app da frota VCP.',resumo],
     ['📅','Reserve o carro','Toque em <b>+ Reservar</b>, escolha o veículo, a data e o nº do serviço. A reserva vai para a agenda da frota.',
       '<div class="l"><span class="tTg">RANGER</span> 27/11 07:00 → 18:00</div><span class="s">29951 – Avaliação da fazenda São Francisco</span><div class="tBt">Reservar</div>'],
     ['📷','Vistoria de saída','Aponte a câmera para o <b>QR Code do carro</b> (ou toque em <b>Iniciar vistoria</b>). Preencha km, itens e marque as avarias no desenho.',
@@ -2274,7 +2353,7 @@ function slidesTutorial(){
       '<div class="l">⛽ 70 L · R$ 430,00 · Sorriso-MT</div><span class="s">📷 painel ✓ &nbsp; 🧾 cupom ✓</span><div class="tBt sec">+ Abastecimento</div>'],
     ['✅','Volta e finalização','Informe km e combustível na volta, as ocorrências e <b>assine com o dedo</b>. O PDF vai para o seu e-mail.',
       '<div class="tSig">'+esc(nome||'Assinatura')+'</div><div class="tBt">Finalizar viagem e enviar PDF</div>'],
-    ['🔔','Ative os avisos','Receba lembrete na véspera da reserva e aviso se a volta do carro atrasar.',av]
+    ['📲','Instale o app e ative os avisos','Com o app na tela inicial ele abre mais rápido e você recebe lembrete da reserva e aviso se a volta atrasar.',inst+av]
   ];
 }
 function mostraTutorial(){
