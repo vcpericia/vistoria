@@ -447,7 +447,6 @@ body.offline .offBanner{display:block}
   <div class="card"><div class="kpis" id="pKpis"></div><div class="nota">Consumo e custo por km são aproximados: km rodados das viagens finalizadas ÷ litros abastecidos no período.</div></div>
   <div class="card"><h2>Gasto com combustível por mês</h2><div class="leg" id="pLeg"></div><div id="grafico"><div class="tip" id="pTip"></div></div></div>
   <div class="card"><h2>Por veículo</h2><div class="tabWrap"><table class="tab" id="pVeicTab"></table></div></div>
-  <div class="card"><h2>Por motorista</h2><div class="tabWrap"><table class="tab" id="pMotTab"></table></div></div>
   <div class="card"><h2>Abastecimentos</h2><div class="tabWrap"><table class="tab" id="pAbTab"></table></div></div>
   <div class="card" id="cMultas">
     <h2><span class="n">!</span>Multas · quem dirigia?</h2>
@@ -1892,16 +1891,13 @@ $('pExcel').onclick=()=>{
     ['Consumo médio (km/L)',K&&L?(K/L).toFixed(2):''],['Custo por km (R$)',K&&R?(R/K).toFixed(2):''],['Multas no período',mu.length]]};
   const porVeic={nome:'Por veículo',colunas:[{t:'Veículo',w:12},{t:'Viagens',w:9,f:'int'},{t:'Km',w:11,f:'int'},{t:'Litros',w:11,f:'dec'},{t:'Gasto (R$)',w:14,f:'R$'},{t:'km/L',w:9,f:'dec'},{t:'R$/km',w:9,f:'dec'}],
     linhas:veics.map(v=>{ const a=ab.filter(x=>x.veiculo===v), w=vi.filter(x=>x.veiculo===v); const r=soma(a,x=>x.valor), l=soma(a,x=>x.litros), k=soma(w,x=>x.kmRodados); return [v,w.length,k,l.toFixed(2),r.toFixed(2),k&&l?(k/l).toFixed(2):'',k&&r?(r/k).toFixed(2):'']; })};
-  const mots=[...new Set([...vi.map(v=>v.motorista),...ab.map(a=>a.motorista)].filter(Boolean))].sort();
-  const porMot={nome:'Por motorista',colunas:[{t:'Motorista',w:32},{t:'Viagens (saída)',w:14,f:'int'},{t:'Km',w:11,f:'int'},{t:'Abastecimentos',w:15,f:'int'},{t:'Gasto (R$)',w:14,f:'R$'}],
-    linhas:mots.map(m=>{ const w=vi.filter(x=>x.motorista===m), a=ab.filter(x=>x.motorista===m); return [m,w.length,soma(w,x=>x.kmRodados),a.length,soma(a,x=>x.valor).toFixed(2)]; })};
   const viagens={nome:'Viagens',colunas:[{t:'Saída',w:11,f:'data'},{t:'Volta',w:11,f:'data'},{t:'Veículo',w:10},{t:'Motorista',w:28},{t:'Acompanhante',w:28},{t:'Destino / serviço',w:40},{t:'KM saída',w:11,f:'int'},{t:'KM volta',w:11,f:'int'},{t:'Km rodados',w:11,f:'int'},{t:'Litros',w:10,f:'dec'},{t:'Combustível (R$)',w:15,f:'R$'},{t:'Avarias novas',w:12,f:'int'},{t:'PDF',w:8,f:'link'}],
     linhas:vi.map(v=>[v.saidaData,v.voltaData,v.veiculo,v.motorista,v.acompanhante,v.destino,v.kmSaida,v.kmVolta,v.kmRodados,v.litros,v.valor,v.avariasNovas,v.pdf])};
   const abast={nome:'Abastecimentos',colunas:[{t:'Data',w:11,f:'data'},{t:'Hora',w:7},{t:'Veículo',w:10},{t:'Motorista',w:28},{t:'Cidade',w:20},{t:'UF',w:5},{t:'Local / posto',w:30},{t:'KM',w:11,f:'int'},{t:'Litros',w:10,f:'dec'},{t:'Valor (R$)',w:13,f:'R$'},{t:'R$/L',w:9,f:'dec'},{t:'Foto painel',w:11,f:'link'},{t:'Foto cupom',w:11,f:'link'}],
     linhas:ab.map(a=>[a.data,a.hora,a.veiculo,a.motorista,a.cidade,a.uf,a.local,a.km,a.litros,a.valor,num(a.litros)?(num(a.valor)/num(a.litros)).toFixed(3):'',a.fotoPainel,a.fotoCupom])};
   const multas={nome:'Multas',colunas:[{t:'Data',w:11,f:'data'},{t:'Hora',w:7},{t:'Veículo',w:10},{t:'Local',w:28},{t:'Valor (R$)',w:13,f:'R$'},{t:'Infração / descrição',w:40},{t:'Motorista responsável',w:28},{t:'Acompanhante',w:28}],
     linhas:mu.map(m=>[m.data,m.hora,m.veiculo,m.local,m.valor,m.descricao,m.motorista,m.acompanhante])};
-  const blob=xlsx([resumo,porVeic,porMot,viagens,abast,multas]);
+  const blob=xlsx([resumo,porVeic,viagens,abast,multas]);
   const nome=`VCP_Frota_${(vf||'todos').toLowerCase()}_${isoDia(ini)}_a_${isoDia(new Date(fim-864e5))}.xlsx`;
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=nome; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },2000);
   toast('Planilha gerada: '+nome,4000);
@@ -2044,9 +2040,6 @@ function pintaPainel(){
   const linhaV=vc=>{ const a=ab.filter(x=>x.veiculo===vc), v=vi.filter(x=>x.veiculo===vc); const r=soma(a,x=>x.valor), l=soma(a,x=>x.litros), k=soma(v,x=>x.kmRodados);
     return `<tr><td><b>${esc(vc)}</b></td><td class="n">${v.length}</td><td class="n">${k?fmtKm(k):'—'}</td><td class="n">${l?l.toLocaleString('pt-BR',{maximumFractionDigits:1}):'—'}</td><td class="n">${r?fmtR$(r):'—'}</td><td class="n">${k&&l?f2(k/l):'—'}</td><td class="n">${k&&r?fmtR$(r/k):'—'}</td></tr>`; };
   $('pVeicTab').innerHTML='<tr><th>Veículo</th><th class="n">Viagens</th><th class="n">Km</th><th class="n">Litros</th><th class="n">Gasto</th><th class="n">km/L</th><th class="n">R$/km</th></tr>'+veics.map(linhaV).join('');
-  const mots=[...new Set([...vi.map(v=>v.motorista),...ab.map(a=>a.motorista)].filter(Boolean))].sort();
-  $('pMotTab').innerHTML='<tr><th>Motorista</th><th class="n">Viagens (saída)</th><th class="n">Km</th><th class="n">Abastec.</th><th class="n">Gasto</th></tr>'+(mots.length?mots.map(m=>{ const v=vi.filter(x=>x.motorista===m), a=ab.filter(x=>x.motorista===m);
-    return `<tr><td>${esc(m)}</td><td class="n">${v.length}</td><td class="n">${fmtKm(soma(v,x=>x.kmRodados))||'—'}</td><td class="n">${a.length}</td><td class="n">${fmtR$(soma(a,x=>x.valor))||'—'}</td></tr>`; }).join(''):'<tr><td colspan="5" class="vazio">Sem dados no período</td></tr>');
   const lista=[...ab].sort((x,y)=>(dt(y.data)-dt(x.data))||String(y.hora).localeCompare(String(x.hora))).slice(0,60);
   $('pAbTab').innerHTML='<tr><th>Data</th><th>Veículo</th><th>Local</th><th class="n">KM</th><th class="n">Litros</th><th class="n">Valor</th><th>Fotos</th></tr>'+(lista.length?lista.map(a=>`<tr><td>${esc(a.data)}<br><small style="color:var(--sub)">${esc(a.hora)}</small></td><td>${esc(a.veiculo)}<br><small style="color:var(--sub)">${esc(a.motorista)}</small></td><td>${esc([a.cidade,a.uf].filter(Boolean).join(' - '))}</td><td class="n">${fmtKm(a.km)}</td><td class="n">${a.litros?num(a.litros).toLocaleString('pt-BR'):''}</td><td class="n">${fmtR$(a.valor)}</td><td>${a.fotoPainel?`<a href="${esc(a.fotoPainel)}" target="_blank" rel="noopener">Painel</a>`:'<span style="color:var(--erro)">sem painel</span>'}<br>${a.fotoCupom?`<a href="${esc(a.fotoCupom)}" target="_blank" rel="noopener">Cupom</a>`:'<span style="color:var(--erro)">sem cupom</span>'}</td></tr>`).join(''):'<tr><td colspan="7" class="vazio">Nenhum abastecimento no período</td></tr>');
 }
