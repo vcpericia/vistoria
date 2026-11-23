@@ -1862,7 +1862,7 @@ function xlsx(abas){ // abas: [{nome, colunas:[{t,w,f}], linhas:[[...]]}]  f: 't
     a.linhas.forEach((ln,i)=>{ const r=i+2; sd+=`<row r="${r}">`+ln.map((v,j)=>{ const f=a.colunas[j].f||'txt', ref=col(j)+r;
       if(v===''||v==null) return '';
       if(f==='data'){ const d=v instanceof Date?v:dt(v); return d?`<c r="${ref}" s="4"><v>${serial(d)}</v></c>`:`<c r="${ref}" t="inlineStr"><is><t>${x(v)}</t></is></c>`; }
-      if(f==='R$'||f==='int'||f==='dec'){ const n=parseFloat(v); return isNaN(n)?`<c r="${ref}" t="inlineStr"><is><t>${x(v)}</t></is></c>`:`<c r="${ref}" s="${EST[f]}"><v>${n}</v></c>`; }
+      if(f==='R$'||f==='int'||f==='dec'){ const n=(typeof v==='number'||/^\s*-?\d+(\.\d+)?\s*$/.test(String(v)))?parseFloat(v):NaN; return isNaN(n)?`<c r="${ref}" t="inlineStr"><is><t>${x(v)}</t></is></c>`:`<c r="${ref}" s="${EST[f]}"><v>${n}</v></c>`; }
       if(f==='link'&&/^https?:/.test(v)) return `<c r="${ref}" t="str" s="6"><f>HYPERLINK("${x(v)}","Abrir")</f><v>Abrir</v></c>`;
       return `<c r="${ref}" t="inlineStr"><is><t xml:space="preserve">${x(v)}</t></is></c>`; }).join('')+'</row>'; });
     const ult=col(a.colunas.length-1)+(a.linhas.length+1);
