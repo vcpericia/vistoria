@@ -1651,7 +1651,7 @@ function renderHome(){
     const env=[a.motorista,a.motoristaAtual,a.acompanhanteAtual].includes(u.nome);
     if(!env&&!u.admin) continue;
     h+=`<div class="item" style="border-left-color:#C0392B;background:#FFF6F5"><div class="t">⚠ ${env?'Sua viagem':'Viagem'} com o ${esc(a.veiculo)} está com a volta atrasada</div>
-      <div class="s">${a.previsaoFonte==='reserva'?'A reserva terminava':a.previsaoFonte==='informada'?'A previsão de volta era':'Saiu há mais de 48 h · previsão'} ${esc(fmtDH(a.previsaoVolta))}${env?'':' · com '+esc(a.motoristaAtual||a.motorista)}. Se já voltou, finalize a vistoria. Se ainda está viajando, informe a nova previsão.</div>
+      <div class="s">${a.previsaoFonte==='reserva'?'A reserva terminava':a.previsaoFonte==='informada'?'A previsão de volta era':'Sem reserva: saiu há mais de 24 h · previsão'} ${esc(fmtDH(a.previsaoVolta))}${env?'':' · com '+esc(a.motoristaAtual||a.motorista)}. Se já voltou, finalize a vistoria. Se ainda está viajando, informe a nova previsão.</div>
       <div class="acts"><button data-abrir="${esc(a.id)}">Abrir e finalizar</button><button data-prev="${esc(a.id)}">Nova previsão</button></div></div>`;
   }
   $('pendLocal').innerHTML=h; if($('btnCont')) $('btnCont').onclick=()=>abrirForm();
