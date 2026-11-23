@@ -214,6 +214,7 @@ body.emForm .topo .voltar{display:grid}
 .agI{display:block;width:100%;text-align:left;border:0;border-radius:7px;padding:4px 5px;margin-bottom:3px;font-size:10.5px;line-height:1.25;cursor:pointer;font-family:inherit;font-weight:600}
 .agI small{display:block;font-weight:500;opacity:.85}
 .agLivre{display:block;width:100%;height:100%;min-height:38px;border:1.5px dashed #D8DDE4;background:none;border-radius:7px;color:#A3ACB8;font-size:10.5px;cursor:pointer;font-family:inherit}
+.maisAb{display:flex;gap:8px;margin-top:10px}.maisAb .btn{flex:1;padding:10px}.maisAb small{font-weight:500;opacity:.75;margin-left:4px}
 .prevV{font-size:12.5px;color:var(--sub);margin:-4px 0 8px}.prevV.atr{color:#C0392B;font-weight:700}.prevV button{border:0;background:none;color:var(--laranja);font-weight:800;cursor:pointer;padding:0 0 0 6px;font-size:12.5px}.chip.res{background:#EAF1FD;color:#1D5FBF}
 .resv{grid-column:1/-1;margin-top:6px;font-size:12px;color:var(--sub);line-height:1.5;border-top:1px dashed #E3E7EC;padding-top:8px}
 .secT .lnk{float:right;border:0;background:none;color:var(--laranja);font-weight:800;font-size:12px;letter-spacing:.02em;text-transform:none;cursor:pointer;padding:0}.chip.uso{background:var(--laranjaClaro);color:#B35C00}
@@ -447,7 +448,7 @@ body.offline .offBanner{display:block}
   <div class="card"><div class="kpis" id="pKpis"></div><div class="nota">Consumo e custo por km são aproximados: km rodados das viagens finalizadas ÷ litros abastecidos no período.</div></div>
   <div class="card"><h2>Gasto com combustível por mês</h2><div class="leg" id="pLeg"></div><div id="grafico"><div class="tip" id="pTip"></div></div></div>
   <div class="card"><h2>Por veículo</h2><div class="tabWrap"><table class="tab" id="pVeicTab"></table></div></div>
-  <div class="card"><h2>Abastecimentos</h2><div class="tabWrap"><table class="tab" id="pAbTab"></table></div></div>
+  <div class="card"><h2>Abastecimentos</h2><div class="tabWrap"><table class="tab" id="pAbTab"></table></div><div class="maisAb" id="pAbMais"></div></div>
   <div class="card" id="cMultas">
     <h2><span class="n">!</span>Multas · quem dirigia?</h2>
     <div class="hint" style="margin-top:-6px">Informe o veículo, a data e a hora da infração. O app procura a viagem e, pelas trocas de motorista, mostra quem estava ao volante.</div>
@@ -1992,7 +1993,9 @@ $('btnPainel').onclick=async()=>{
     $('pVeic').innerHTML='<option value="">Todos</option>'+PAINEL.veiculos.map(v=>`<option>${esc(v)}</option>`).join(''); $('mVeic').innerHTML=PAINEL.veiculos.map(v=>`<option>${esc(v)}</option>`).join(''); pintaPainel(); pintaMultas(); }
   catch(e){ st($('stPainel'),semRede(e)?'Sem conexão: o painel precisa de internet.':e.message,'erro'); }
 };
-['pPeriodo','pVeic'].forEach(id=>$(id).addEventListener('change',()=>PAINEL&&pintaPainel()));
+['pPeriodo','pVeic'].forEach(id=>$(id).addEventListener('change',()=>{ PAB_N=10; PAINEL&&pintaPainel(); }));
+let PAB_N=10; // quantos abastecimentos aparecem na lista do painel
+$('pAbMais').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; PAB_N=b.dataset.abmenos?10:PAB_N+10; pintaPainel(); });
 function intervalo(p){
   const h=new Date(), y=h.getFullYear(), m=h.getMonth();
   if(p==='mes') return [new Date(y,m,1),new Date(y,m+1,1)];
@@ -2040,7 +2043,9 @@ function pintaPainel(){
   const linhaV=vc=>{ const a=ab.filter(x=>x.veiculo===vc), v=vi.filter(x=>x.veiculo===vc); const r=soma(a,x=>x.valor), l=soma(a,x=>x.litros), k=soma(v,x=>x.kmRodados);
     return `<tr><td><b>${esc(vc)}</b></td><td class="n">${v.length}</td><td class="n">${k?fmtKm(k):'—'}</td><td class="n">${l?l.toLocaleString('pt-BR',{maximumFractionDigits:1}):'—'}</td><td class="n">${r?fmtR$(r):'—'}</td><td class="n">${k&&l?f2(k/l):'—'}</td><td class="n">${k&&r?fmtR$(r/k):'—'}</td></tr>`; };
   $('pVeicTab').innerHTML='<tr><th>Veículo</th><th class="n">Viagens</th><th class="n">Km</th><th class="n">Litros</th><th class="n">Gasto</th><th class="n">km/L</th><th class="n">R$/km</th></tr>'+veics.map(linhaV).join('');
-  const lista=[...ab].sort((x,y)=>(dt(y.data)-dt(x.data))||String(y.hora).localeCompare(String(x.hora))).slice(0,60);
+  const todos=[...ab].sort((x,y)=>(dt(y.data)-dt(x.data))||String(y.hora).localeCompare(String(x.hora))); const lista=todos.slice(0,PAB_N);
+  const resta=todos.length-lista.length;
+  $('pAbMais').innerHTML=(resta>0?`<button class="btn sec" data-abmais="1">Ver mais ${Math.min(10,resta)} <small>(${lista.length} de ${todos.length})</small></button>`:'')+(PAB_N>10&&lista.length>10?'<button class="btn sec" data-abmenos="1">Mostrar menos</button>':'');
   $('pAbTab').innerHTML='<tr><th>Data</th><th>Veículo</th><th>Local</th><th class="n">KM</th><th class="n">Litros</th><th class="n">Valor</th><th>Fotos</th></tr>'+(lista.length?lista.map(a=>`<tr><td>${esc(a.data)}<br><small style="color:var(--sub)">${esc(a.hora)}</small></td><td>${esc(a.veiculo)}<br><small style="color:var(--sub)">${esc(a.motorista)}</small></td><td>${esc([a.cidade,a.uf].filter(Boolean).join(' - '))}</td><td class="n">${fmtKm(a.km)}</td><td class="n">${a.litros?num(a.litros).toLocaleString('pt-BR'):''}</td><td class="n">${fmtR$(a.valor)}</td><td>${a.fotoPainel?`<a href="${esc(a.fotoPainel)}" target="_blank" rel="noopener">Painel</a>`:'<span style="color:var(--erro)">sem painel</span>'}<br>${a.fotoCupom?`<a href="${esc(a.fotoCupom)}" target="_blank" rel="noopener">Cupom</a>`:'<span style="color:var(--erro)">sem cupom</span>'}</td></tr>`).join(''):'<tr><td colspan="7" class="vazio">Nenhum abastecimento no período</td></tr>');
 }
 $('grafico').addEventListener('pointermove',e=>{ const t=e.target.dataset&&e.target.dataset.tip, tip=$('pTip');
