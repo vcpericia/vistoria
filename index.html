@@ -193,7 +193,26 @@ body.emForm .topo .voltar{display:grid}
 .ola{display:flex;align-items:center;gap:12px;margin:16px 2px 4px}
 .ola .av{width:44px;height:44px;border-radius:50%;background:var(--laranja);color:#fff;display:grid;place-items:center;font-weight:800}
 .ola b{display:block;font-size:17px}.ola small{color:var(--sub);font-size:12px}
-.ola button+button{margin-left:8px}.ola #btnAvisos.on{border-color:#1E9E5A;color:#1E9E5A}
+.ola button+button{margin-left:6px}.ola button{white-space:nowrap}.ola>div:not(.av){min-width:0;flex:1}.ola>div:not(.av) b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ola #btnAjuda,.ola #btnAvisos{min-width:36px;padding:7px 8px;font-size:14px}
+#tut{position:fixed;inset:0;z-index:55;background:#fff;display:none;flex-direction:column}#tut.on{display:flex}
+#tut .tTop{background:linear-gradient(110deg,var(--escuro) 60%,#8a4a10);height:56px;display:flex;align-items:center;padding:0 16px;flex:0 0 auto}#tut .tTop svg{height:30px;width:auto;color:#fff}
+#tut .tPular{margin-left:auto;background:none;border:0;color:#CBD2DA;font-size:14px;font-weight:600;padding:8px}
+#tut .tVp{flex:1;overflow:hidden;position:relative}#tut .tTrilho{display:flex;height:100%;transition:transform .35s ease}
+#tut .tSl{flex:0 0 100%;box-sizing:border-box;padding:28px 26px 10px;text-align:center;overflow-y:auto;max-width:100%}
+#tut .tSl>div{max-width:420px;margin:0 auto}
+#tut .tIc{width:86px;height:86px;border-radius:26px;background:#FDEBD8;margin:6px auto 14px;display:grid;place-items:center;font-size:44px}
+#tut .tN{font-size:11px;color:var(--sub);letter-spacing:.12em;text-transform:uppercase}#tut h2{font-size:23px;margin:6px 0 10px}
+#tut p{font-size:15px;line-height:1.5;color:#4A5361;margin:0 0 18px}
+#tut .tMini{border:1.5px solid var(--borda);border-radius:16px;padding:14px;text-align:left;background:#FAFBFC;font-size:13.5px}
+#tut .tMini .l{margin-bottom:7px;display:flex;align-items:center;gap:7px}#tut .tMini .s{color:var(--sub);display:block;line-height:1.45}
+#tut .tTg{background:var(--escuro);color:#fff;border-radius:6px;padding:2px 7px;font-size:11.5px;font-weight:700}
+#tut .tIn{margin-left:auto;border:1px solid var(--borda);border-radius:7px;padding:2px 9px;background:#fff}
+#tut .tBar{flex:1;height:8px;background:var(--borda);border-radius:4px;overflow:hidden}#tut .tBar i{display:block;height:100%;width:75%;background:#1E9E5A}
+#tut .tBt{background:var(--laranja);color:#fff;border-radius:10px;text-align:center;font-weight:700;padding:9px;margin-top:6px}#tut .tBt.sec{background:#fff;color:var(--escuro);border:1.5px solid var(--escuro)}
+#tut .tSig{font-family:'Brush Script MT','Segoe Script',cursive;font-size:30px;color:#14306b;border-bottom:1.5px dashed #B8BEC8;text-align:center;padding:4px 0;margin-bottom:6px}
+#tut .tBot{padding:12px 22px calc(18px + env(safe-area-inset-bottom));flex:0 0 auto;max-width:460px;width:100%;margin:0 auto;box-sizing:border-box}
+#tut .tDots{display:flex;justify-content:center;gap:7px;margin-bottom:14px}#tut .tDots i{width:8px;height:8px;border-radius:4px;background:#D5DAE1;transition:all .3s}#tut .tDots i.on{width:24px;background:var(--laranja)}
+#tut .tLink{display:block;margin:10px auto 0;background:none;border:0;color:var(--sub);font-size:13px;font-weight:600}.ola #btnAvisos.on{border-color:#1E9E5A;color:#1E9E5A}
 .ola button{margin-left:auto;border:1.5px solid var(--borda);background:#fff;border-radius:10px;padding:7px 11px;font-size:12px;font-weight:700;color:var(--sub)}
 .frota{display:grid;gap:10px}
 .veic{background:#fff;border:1px solid #E6E9EE;border-radius:18px;box-shadow:var(--sombra);padding:14px;display:grid;grid-template-columns:72px 1fr;gap:4px 12px;align-items:center}
@@ -285,7 +304,7 @@ body.offline .offBanner{display:block}
 <main>
 <!-- ================= INÍCIO ================= -->
 <div class="view" id="vHome">
-  <div class="ola"><div class="av" id="uAv">?</div><div><b id="uNome">—</b><small id="uEmail"></small></div><button id="btnAvisos" title="Avisos no celular">🔔 Avisos</button><button id="btnSair">Sair</button></div>
+  <div class="ola"><div class="av" id="uAv">?</div><div><b id="uNome">—</b><small id="uEmail"></small></div><button id="btnAjuda" title="Como usar o app">?</button><button id="btnAvisos" title="Avisos no celular">🔔</button><button id="btnSair">Sair</button></div>
   <div id="pendLocal"></div>
   <div class="secT">Frota</div>
   <div class="frota" id="frota"></div>
@@ -535,6 +554,11 @@ body.offline .offBanner{display:block}
   <button class="btn" id="pvSalvar">Salvar previsão</button>
   <button class="btn verm" id="pvCancelar">Cancelar</button>
 </div></div>
+
+<div id="tut"><div class="tTop"><svg viewBox="0 0 453.56 301"><use href="#logoVCP"/></svg><button class="tPular" id="tPular">Pular</button></div>
+  <div class="tVp" id="tVp"><div class="tTrilho" id="tTrilho"></div></div>
+  <div class="tBot"><div class="tDots" id="tDots"></div><button class="btn" id="tProx">Próximo →</button><button class="tLink" id="tVolta" style="visibility:hidden">← Voltar</button></div>
+</div>
 
 <div class="modalBg" id="mFinal"><div class="modal">
   <h3><span class="n">✅</span><span id="fnTit">Viagem finalizada</span></h3>
@@ -2165,7 +2189,7 @@ async function iniciaApp(){
   $('splash').style.display='none';
   if(V && (V.status==='andamento'||V.status==='rascunho')){ abrirForm(); sincroniza(); } else { V=null; persist(); irHome(false); }
   processaFila(); processaFotos(); pintaAvisos(); renovaPush();
-  if(QR_VEIC) abreQR();
+  if(QR_VEIC) abreQR(); else if(!LS.get('vcp_tut_'+SESS.usuario.email,null)) mostraTutorial();
 }
 
 /* =================== AVISOS (push) =================== */
@@ -2174,7 +2198,7 @@ const ehIOS=()=>/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platfor
 const instalado=()=>navigator.standalone===true||matchMedia('(display-mode: standalone)').matches;
 const avisosAtivos=()=>!!LS.get('vcp_push',null) && PUSH_OK() && Notification.permission==='granted';
 function pintaAvisos(){
-  const b=$('btnAvisos'); if(!b) return; const on=avisosAtivos(); b.classList.toggle('on',on); b.textContent=on?'🔔 Avisos ✓':'🔔 Avisos';
+  const b=$('btnAvisos'); if(!b) return; const on=avisosAtivos(); b.classList.toggle('on',on); b.textContent=on?'🔔 ✓':'🔔';
   const iosSem=ehIOS()&&!instalado();
   $('avIos').style.display=iosSem?'':'none';
   $('avAtivar').style.display=on||iosSem?'none':''; $('avTeste').style.display=on?'':'none'; $('avDesativar').style.display=on?'':'none';
@@ -2232,6 +2256,50 @@ async function abreQR(){
   }
   await novaVistoria(v); if(V&&V.veiculo===v&&V.status==='rascunho'){ marcaCheckin('checkinQR'); toast('📷 '+v+': vistoria de saída iniciada pelo QR Code.',3500); }
 }
+
+/* =================== TUTORIAL (primeiro acesso) =================== */
+let TUT_I=0;
+function slidesTutorial(){
+  const nome=primeiro(SESS&&SESS.usuario&&SESS.usuario.nome||'');
+  const inst=instalado()?'<div class="l">✅ Você já está usando o app instalado.</div>':
+    '<div class="l"><b>Dica:</b> instale o app na tela inicial</div><span class="s">'+(ehIOS()?'iPhone (Safari): Compartilhar ⬆ → <b>Adicionar à Tela de Início</b>':'Android (Chrome): menu ⋮ → <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>')+'</span>';
+  const av=avisosAtivos()?'<div class="l">✅ Os avisos já estão ativos neste celular.</div>':'<div class="l">🔔 Amanhã: RANGER às 07:00</div><span class="s">29951 – Avaliação da fazenda São Francisco</span><div class="tBt" id="tAtivar">Ativar avisos agora</div>';
+  return [
+    ['👋','Bem-vindo'+(nome?', '+esc(nome):'')+'!','Em 1 minuto você aprende o básico do app da frota VCP.',inst],
+    ['📅','Reserve o carro','Toque em <b>+ Reservar</b>, escolha o veículo, a data e o nº do serviço. A reserva vai para a agenda da frota.',
+      '<div class="l"><span class="tTg">RANGER</span> 27/11 07:00 → 18:00</div><span class="s">29951 – Avaliação da fazenda São Francisco</span><div class="tBt">Reservar</div>'],
+    ['📷','Vistoria de saída','Aponte a câmera para o <b>QR Code do carro</b> (ou toque em <b>Iniciar vistoria</b>). Preencha km, itens e marque as avarias no desenho.',
+      '<div class="l">KM saída <span class="tIn">45.230</span></div><div class="l">Combustível <span class="tBar"><i></i></span></div><div class="tBt">Confirmar saída</div>'],
+    ['⛽','Durante a viagem','Registre cada <b>abastecimento</b> com foto do painel e do cupom. Trocou de motorista? Registre a <b>troca</b>.',
+      '<div class="l">⛽ 70 L · R$ 430,00 · Sorriso-MT</div><span class="s">📷 painel ✓ &nbsp; 🧾 cupom ✓</span><div class="tBt sec">+ Abastecimento</div>'],
+    ['✅','Volta e finalização','Informe km e combustível na volta, as ocorrências e <b>assine com o dedo</b>. O PDF vai para o seu e-mail.',
+      '<div class="tSig">'+esc(nome||'Assinatura')+'</div><div class="tBt">Finalizar viagem e enviar PDF</div>'],
+    ['🔔','Ative os avisos','Receba lembrete na véspera da reserva e aviso se a volta do carro atrasar.',av]
+  ];
+}
+function mostraTutorial(){
+  const sl=slidesTutorial(); TUT_I=0;
+  $('tTrilho').innerHTML=sl.map(([ic,t,tx,mini],i)=>`<div class="tSl"><div><div class="tIc">${ic}</div><div class="tN">${i+1} de ${sl.length}</div><h2>${t}</h2><p>${tx}</p><div class="tMini">${mini}</div></div></div>`).join('');
+  $('tDots').innerHTML=sl.map(()=>'<i></i>').join('');
+  const at=$('tAtivar'); if(at) at.onclick=()=>{ fechaTutorial(); $('btnAvisos').click(); };
+  $('tut').classList.add('on'); pintaTut();
+}
+function pintaTut(){
+  const n=$('tTrilho').children.length; TUT_I=Math.max(0,Math.min(n-1,TUT_I));
+  $('tTrilho').style.transform=`translateX(${-100*TUT_I}%)`;
+  [...$('tDots').children].forEach((d,i)=>d.classList.toggle('on',i===TUT_I));
+  const ult=TUT_I===n-1; $('tProx').textContent=ult?'Começar a usar':'Próximo →';
+  $('tPular').style.visibility=ult?'hidden':''; $('tVolta').style.visibility=TUT_I?'':'hidden';
+}
+function fechaTutorial(){ $('tut').classList.remove('on'); if(SESS) LS.set('vcp_tut_'+SESS.usuario.email,1); }
+$('tProx').onclick=()=>{ if(TUT_I>=$('tTrilho').children.length-1) fechaTutorial(); else { TUT_I++; pintaTut(); } };
+$('tVolta').onclick=()=>{ TUT_I--; pintaTut(); };
+$('tPular').onclick=fechaTutorial;
+$('btnAjuda').onclick=mostraTutorial;
+{ let x0=null,y0=0; const vp=$('tVp');
+  vp.addEventListener('touchstart',e=>{ x0=e.touches[0].clientX; y0=e.touches[0].clientY; },{passive:true});
+  vp.addEventListener('touchend',e=>{ if(x0==null) return; const dx=e.changedTouches[0].clientX-x0, dy=e.changedTouches[0].clientY-y0; x0=null;
+    if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)){ TUT_I+=dx<0?1:-1; pintaTut(); } },{passive:true}); }
 
 /* =================== ciclo =================== */
 setInterval(()=>{ if(document.hidden||!SESS) return;
