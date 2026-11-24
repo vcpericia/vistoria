@@ -524,6 +524,12 @@ input:focus,select:focus,textarea:focus{background-color:#1B222B}
   <div class="gaugeWrap" id="gVolta"></div>
 </div>
 
+<div class="card soViagem" id="cardEqV" style="display:none">
+  <h2><span class="n">🧰</span>Equipamentos da viagem</h2>
+  <div class="hint" style="margin:-6px 0 6px">Confira se cada equipamento voltou. Os que voltaram ficam livres na hora para outras reservas; os que não voltaram geram um aviso para os administradores.</div>
+  <div id="eqVolta"></div>
+</div>
+
 <div class="card soViagem">
   <h2><span class="n">10</span>Ocorrências</h2>
   <div class="sn" id="ocLinha"><span>Houve alguma ocorrência na viagem?<br><small style="color:var(--sub);font-weight:400">Batida, avaria nova, pane, pneu furado, multa, problema com o carro…</small></span>
@@ -1779,6 +1785,11 @@ async function montaPDF(v, parcial){
   const kmA=parseFloat(v.saida.km),kmB=parseFloat(v.volta.km); const extra=[];
   if(!isNaN(kmA)&&!isNaN(kmB)) extra.push('Km rodados: '+fmtKm(kmB-kmA)); if(v.checkinQR||v.checkinQRVolta) extra.push('Check-in QR do veículo: '+[v.checkinQR&&'saída '+v.checkinQR.hora,v.checkinQRVolta&&'volta '+v.checkinQRVolta.hora].filter(Boolean).join(', ')); if(v.combVolta!=null) extra.push('Combustível na volta: '+NIVEIS[v.combVolta]);
   doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.text(doc.splitTextToSize([v.volta.obs,extra.join('  |  ')].filter(Boolean).join('\n'),W-84).slice(0,3),L+81.5,yV+8.5); y+=18;
+  { const ev=v.equipVolta&&v.equipVolta.itens; const ks=ev?Object.keys(ev):[];
+    if(ks.length){ const nm=i=>(v.equipVolta.nomes||{})[i]||((typeof eqPorId==='function'&&eqPorId(i))||{}).nome||i;
+      const t=ks.map(i=>nm(i)+(ev[i]==='SIM'?' (voltou)':' (NÃO VOLTOU)')).join(';  ');
+      doc.setFontSize(8); const ls=doc.splitTextToSize(t,W-32); const hB=Math.max(7,3+ls.length*3.6); ensure(hB);
+      doc.rect(L,y,W,hB); txt('EQUIPAMENTOS:',L+1.5,y+4.2,{b:true}); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.text(ls,L+29,y+4.2); y+=hB; } }
   { // ocorrências + assinatura
     const teve=v.ocorrTeve==='SIM';
     let linhas;
@@ -1832,6 +1843,8 @@ function validar(){
     er('ocDesc',d); er('ocorrencia',q); er('ocData',!!V.ocorrData); er('ocHora',!!V.ocorrHora);
     if(!d) f.push('o que aconteceu na ocorrência'); if(!q) f.push('a quem a ocorrência foi informada'); if(!dh) f.push('data/hora do aviso da ocorrência');
   }
+  { const ev=(V.equipVolta||{}).itens||{}; let pend=0; document.querySelectorAll('#eqVolta [data-eqv]').forEach(sg=>{ const ok=!!ev[sg.dataset.eqv]; sg.parentElement.classList.toggle('campoErro',!ok); if(!ok) pend++; });
+    if(pend) f.push('conferir se os equipamentos voltaram'); }
   er('sig',!!V.assinatura); if(!V.assinatura) f.push('assinatura do motorista');
   return f;
 }
@@ -2208,9 +2221,9 @@ function abrirForm(){
 function renderForm(){
   $('veicFixo').innerHTML=`<svg><use href="${icVeic(V.veiculo)}"/></svg>${esc(V.veiculo)}`;
   preencheCampos(); montaItens(); montaPneus(); desenhaDiagrama(); renderGauge('gSaida','combSaida'); renderGauge('gVolta','combVolta');
-  listaAbast(); listaTrocas(); atualizaDirigindo(); kmRodados(); montaDatalist(); requestAnimationFrame(()=>prepSig(true)); stOff($('stFinal'));
+  listaAbast(); listaTrocas(); atualizaDirigindo(); kmRodados(); montaDatalist(); requestAnimationFrame(()=>prepSig(true)); stOff($('stFinal')); pintaEqVolta();
 }
-function renderRemoto(){ if(!V || !$('vForm').classList.contains('on')) return;
+function renderRemoto(){ if(!V || !$('vForm').classList.contains('on')) return; pintaEqVolta();
   preencheCampos(); montaItens(); montaPneus(); desenhaDiagrama(); renderGauge('gSaida','combSaida'); renderGauge('gVolta','combVolta');
   listaAbast(); listaTrocas(); atualizaDirigindo(); kmRodados(); prepSig(false); }
 
@@ -2560,6 +2573,21 @@ $('eqeSalvar').onclick=async()=>{ if(!$('eqeNome').value.trim()){ st($('stEqe'),
     $('mEqEd').classList.remove('on'); toast('Equipamento salvo ✔'); await carregaInicio(); pintaEquip(); }
   catch(e){ st($('stEqe'),semRede(e)?'Sem internet.':e.message,'erro'); }
   finally{ $('eqeSalvar').disabled=false; } };
+
+/* conferência dos equipamentos na volta */
+function eqDaViagem(v=V){ if(!v||!v.saida) return []; const ini=(v.saida.data||'')+'T'+(v.saida.hora||'00:00'), ag=agoraISO();
+  const pessoas=[v.motorista,motoristaAtual(v),v.acompanhante].filter(Boolean);
+  return RESEQ().filter(r=>(v.reservaId&&r.reservaId===v.reservaId)||(pessoas.some(p=>mesmaPessoa(p,r.funcionario))&&r.de<=ag&&r.ate>=ini)); }
+function pintaEqVolta(){ const card=$('cardEqV'); if(!card) return; if(!V||V.status!=='andamento'){ card.style.display='none'; return; }
+  const ev=(V.equipVolta&&V.equipVolta.itens)||{}, vis={}; const itens=[];
+  eqDaViagem().forEach(r=>r.ids.forEach(i=>{ if(!vis[i]){ vis[i]=1; itens.push([i,r.id]); } }));
+  Object.keys(ev).forEach(i=>{ if(!vis[i]){ vis[i]=1; itens.push([i,(V.equipVolta.res||{})[i]||'']); } });
+  card.style.display=itens.length?'':'none';
+  $('eqVolta').innerHTML=itens.map(([i,rid])=>{ const nome=(eqPorId(i)||{}).nome||((V.equipVolta||{}).nomes||{})[i]||i; const r=ev[i];
+    return `<div class="sn"><span>${esc(nome)}</span><div class="seg" data-eqv="${esc(i)}" data-res="${esc(rid)}"><button class="s ${r==='SIM'?'on':''}" data-v="SIM">VOLTOU</button><button class="n ${r==='NÃO'?'on':''}" data-v="NÃO">NÃO</button></div></div>`; }).join(''); }
+$('eqVolta').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b||!V) return; const sg=b.parentElement, i=sg.dataset.eqv;
+  const ev=V.equipVolta=V.equipVolta||{}; ev.itens=ev.itens||{}; ev.res=ev.res||{}; ev.nomes=ev.nomes||{};
+  ev.itens[i]=b.dataset.v; ev.res[i]=sg.dataset.res; ev.nomes[i]=(eqPorId(i)||{}).nome||i; marca('equipVolta'); pintaEqVolta(); });
 
 /* =================== veículo indisponível =================== */
 const indDe=v=>((INI&&INI.indisponiveis)||[]).filter(b=>b.veiculo===v&&(!b.ate||b.ate>agoraISO()));
