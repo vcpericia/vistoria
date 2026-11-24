@@ -416,7 +416,7 @@ input:focus,select:focus,textarea:focus{background-color:#1B222B}
   <div id="pendLocal"></div>
   <div class="secT">Frota</div>
   <div class="frota" id="frota"></div>
-  <div class="secT">Próximas reservas <button class="lnk" id="btnReservar">+ Reservar</button><button class="lnk" id="btnAgenda" style="margin-right:14px">📅 Semana</button></div>
+  <div class="secT">Reservas da semana <button class="lnk" id="btnReservar">+ Reservar</button><button class="lnk" id="btnAgenda" style="margin-right:14px">📅 Semana</button></div>
   <div id="reservas"></div>
   <div class="secT">Equipamentos <button class="lnk" id="btnEqRes">+ Reservar</button><button class="lnk" id="btnEqVer" style="margin-right:14px">🧰 Ver todos</button></div>
   <div id="eqHome"></div>
@@ -1896,7 +1896,7 @@ function renderHome(){
   if(V) h+=`<div class="item" style="border-left-color:#1E9E5A"><div class="t">Continuar vistoria · ${esc(V.veiculo)}</div><div class="s">${V.status==='rascunho'?'Rascunho, saída ainda não confirmada':(pendente()?'Há alterações aguardando envio':'Aberta neste celular')} · saída ${brData(V.saida.data)} ${esc(V.saida.hora)}</div><div class="acts"><button id="btnCont">Abrir</button></div></div>`;
   if(FILA.length) h+=`<div class="item" style="border-left-color:#D64532"><div class="t">${FILA.length} viagem(ns) finalizada(s) aguardando internet</div><div class="s">Serão enviadas automaticamente.</div></div>`;
   for(const a of (INI&&INI.abertas||[]).filter(x=>x.atrasada)){
-    const env=[a.motorista,a.motoristaAtual,a.acompanhanteAtual].includes(u.nome);
+    const env=ehEu(a.motorista,a.motoristaAtual,a.acompanhanteAtual);
     if(!env&&!u.admin) continue;
     h+=`<div class="item" style="border-left-color:#C0392B;background:#FFF6F5"><div class="t">⚠ ${env?'Sua viagem':'Viagem'} com o ${esc(a.veiculo)} está com a volta atrasada</div>
       <div class="s">${a.previsaoFonte==='reserva'?'A reserva terminava':a.previsaoFonte==='informada'?'A previsão de volta era':'Sem reserva: saiu há mais de 24 h · previsão'} ${esc(fmtDH(a.previsaoVolta))}${env?'':' · com '+esc(a.motoristaAtual||a.motorista)}. Se já voltou, finalize a vistoria. Se ainda está viajando, informe a nova previsão.</div>
@@ -1912,7 +1912,7 @@ function renderHome(){
       <div class="bts">${ab?`<button class="btn" data-abrir="${ab.id}">Abrir viagem</button>${SESS.usuario.admin?`<button class="btn verm" style="flex:0 0 auto;width:auto;padding:11px 12px" data-cancelar="${ab.id}" data-v="${vc}">Descartar</button>`:''}`:ind&&!u.admin?`<button class="btn" disabled>Indisponível</button>`:`<button class="btn" data-nova="${vc}">Iniciar vistoria</button>`}<button class="btn sec" data-reservar="${vc}" style="flex:0 0 auto;width:auto;padding:11px 12px">Reservar</button><button class="btn sec" data-frota="${vc}">Avarias</button></div>${rs.length?`<div class="resv">📅 ${rs.slice(0,2).map(r=>`${esc(fmtPer(r))} · ${esc(primeiro(r.motorista||r.reservadoPor))}${r.servico?' · '+esc(r.servico):''}`).join('<br>📅 ')}</div>`:''}${ind?`<div class="indInfo">🔧 <b>${esc(ind.motivo)}</b> · ${esc(perInd(ind))}${ind.obs?'<br>'+esc(ind.obs):''}</div>`:''}${indF?`<div class="indInfo">🔧 Ficará indisponível: <b>${esc(indF.motivo)}</b> · ${esc(perInd(indF))}</div>`:''}${u.admin?`<div class="admLnk">${ind||indF?`<button data-liberar="${esc((ind||indF).id)}" data-v="${vc}">${ind?'Liberar o veículo agora':'Cancelar a indisponibilidade'}</button>`:`<button data-ind="${vc}">🔧 Marcar como indisponível</button>`}</div>`:''}</div>`;
   }).join('');
   pintaReservas(); pintaEqHome();
-  const rec=(INI&&INI.recentes||[]).slice(0,5);
+  const rec=(INI&&INI.recentes||[]).slice(0,4);
   $('ultimas').innerHTML = rec.length ? rec.map(itemHist).join('') : '<div class="vazio">Nenhuma viagem finalizada ainda.</div>';
 }
 const itemHist = r => `<div class="item"><div class="t">${esc(r.veiculo)} · ${esc(r.saidaData)} → ${esc(r.voltaData)}</div>
@@ -1936,13 +1936,18 @@ const agoraISO=()=>{ const d=new Date(); return hojeISO(d)+'T'+horaAgora(d); };
 const reservasDe=v=>reservasTodas().filter(r=>r.veiculo===v&&r.fim>=agoraISO());
 function reservaAgora(v){ const hoje=hojeISO(new Date()), ag=agoraISO(); return reservasTodas().find(r=>r.veiculo===v&&r.fim>=ag&&r.inicio.slice(0,10)<=hoje); }
 const primeiro=n=>String(n||'?').split(' ')[0];
+/** mesma pessoa mesmo com nome incompleto: "Vinicius Viegas" = "Vinicius Viegas Dias Pereira" */
+const tokNome=n=>String(n||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').split(/\s+/).filter(x=>x.length>1&&!/^(de|da|do|dos|das|e)$/.test(x));
+function mesmaPessoa(a,b){ const x=tokNome(a), y=tokNome(b); if(!x.length||!y.length||x[0]!==y[0]) return false; const [c,l]=x.length<=y.length?[x,y]:[y,x]; return c.every(t=>l.includes(t)); }
+const ehEu=(...nomes)=>nomes.some(n=>mesmaPessoa(n,SESS&&SESS.usuario.nome));
 function fmtPer(r){ const d=x=>x.slice(8,10)+'/'+x.slice(5,7), h=x=>x.slice(11,16);
   if(r.diaInteiro) return r.inicio.slice(0,10)===r.fim.slice(0,10)?d(r.inicio):d(r.inicio)+' a '+d(r.fim);
   return r.inicio.slice(0,10)===r.fim.slice(0,10)?`${d(r.inicio)} ${h(r.inicio)}–${h(r.fim)}`:`${d(r.inicio)} ${h(r.inicio)} a ${d(r.fim)} ${h(r.fim)}`; }
 function pintaReservas(){
-  const el=$('reservas'); if(!el) return; const ag=agoraISO(); const lista=reservasTodas().filter(r=>r.fim>=ag);
+  const el=$('reservas'); if(!el) return; const ag=agoraISO(); const fimSem=new Date(segunda(new Date())); fimSem.setDate(fimSem.getDate()+6); const lim=hojeISO(fimSem)+'T23:59';
+  const lista=reservasTodas().filter(r=>r.fim>=ag&&r.inicio<=lim);
   if(INI&&INI.erroAgenda){ el.innerHTML=`<div class="vazio">Agenda indisponível no momento.</div>`; return; }
-  el.innerHTML=lista.length?lista.slice(0,12).map(r=>{ const pode=SESS.usuario.admin||[r.motorista,r.acompanhante,r.reservadoPor].includes(SESS.usuario.nome);
+  el.innerHTML=lista.length?lista.slice(0,12).map(r=>{ const pode=SESS.usuario.admin||ehEu(r.motorista,r.acompanhante,r.reservadoPor);
     return `<div class="item" style="border-left-color:${{GOL:'#2A78D6',SAVEIRO:'#EB6834',RANGER:'#1BAF7A'}[r.veiculo]||'#999'}">
       <div class="t">${esc(r.veiculo)} · ${esc(fmtPer(r))}</div>
       <div class="s">${r.servico?'<b>'+esc(r.servico)+'</b> - ':''}${esc(r.motivo||r.titulo||'')}${r.destino?' · '+esc(r.destino):''}</div>
@@ -1950,7 +1955,7 @@ function pintaReservas(){
       ${r.equipamentos?`<div class="s">🧰 ${esc(r.equipamentos)}</div>`:''}
       <div class="s">${esc(r.motorista||r.reservadoPor||'?')}${r.acompanhante?' e '+esc(r.acompanhante):''} · ${r.origem==='agenda'?'marcado no Google Agenda':'reservado pelo app'}</div>
       ${pode?`<div class="acts"><button data-cancres="${esc(r.id)}" data-v="${esc(r.veiculo)}">Cancelar reserva</button></div>`:''}</div>`; }).join('')
-    :'<div class="vazio">Nenhuma reserva. Toque em "+ Reservar" ou crie um evento na agenda "Frota VCP" do veículo.</div>';
+    :'<div class="vazio">Nenhuma reserva de carro nesta semana. Toque em "📅 Semana" para ver as próximas semanas ou em "+ Reservar".</div>';
 }
 function abreReserva(veic,dia){
   const veics=(INI&&INI.veiculos)||['GOL','SAVEIRO','RANGER'];
@@ -2153,7 +2158,7 @@ async function novaVistoria(veic){
   const d=new Date(); const u=SESS.usuario; const rv=reservaAgora(veic); const ind=indAgora(veic);
   if(ind && !u.admin){ toast(`O ${veic} está indisponível (${ind.motivo}) ${perInd(ind)}. Fale com um administrador.`,6000); return; }
   if(ind && !confirmar(`O ${veic} está marcado como indisponível (${ind.motivo}). Iniciar a vistoria mesmo assim (ex.: levar à oficina)?`)) return;
-  if(rv && ![rv.motorista,rv.acompanhante,rv.reservadoPor].includes(u.nome) && !confirmar(`O ${veic} está reservado ${fmtPer(rv)} para ${rv.motorista||rv.reservadoPor}${rv.destino?' ('+rv.destino+')':''}. Iniciar a vistoria mesmo assim?`)) return;
+  if(rv && !ehEu(rv.motorista,rv.acompanhante,rv.reservadoPor) && !confirmar(`O ${veic} está reservado ${fmtPer(rv)} para ${rv.motorista||rv.reservadoPor}${rv.destino?' ('+rv.destino+')':''}. Iniciar a vistoria mesmo assim?`)) return;
   V={ id:uid(), status:'rascunho', veiculo:veic, motorista:(rv&&rv.motorista)||u.nome, acompanhante:(rv&&rv.acompanhante)||'', reservaId:rv?rv.id:'', objetivo:(rv&&rv.objetivo)||'', equipamentos:(rv&&rv.equipamentos)||'',
     saida:{data:hojeISO(d),hora:horaAgora(d),km:'',destino:rv?[rv.servico?rv.servico+' - '+(rv.motivo||''):rv.motivo,rv.destino].filter(Boolean).join(' · '):''}, itens:{}, obs:{direito:'',esquerdo:'',dianteira:'',traseira:'',superior:''},
     combSaida:null, pneus:{}, pneusObs:'', trocas:[], abastecimentos:[], volta:{data:'',hora:'',km:'',obs:''}, combVolta:null, ocorrencia:'', ocorrTeve:'', ocorrDesc:'', ocorrData:'', ocorrHora:'', assinatura:'',
@@ -2468,10 +2473,10 @@ function filtraEq(lista,busca){ const q=String(busca||'').toLowerCase().normaliz
   return lista.filter(e=>[e.nome,e.codigo,e.serie,e.setor].join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q)); }
 function pintaEqHome(){
   const el=$('eqHome'); if(!el) return; const u=SESS.usuario; const ag=agoraISO();
-  const mine=RESEQ().filter(r=>r.funcionario===u.nome||r.criadoPor===u.nome);
+  const mine=RESEQ().filter(r=>ehEu(r.funcionario,r.criadoPor));
   const outros=RESEQ().filter(r=>!mine.includes(r)&&r.de<=ag);
   let h=mine.map(r=>{ const usando=r.de<=ag; return `<div class="item" style="border-left-color:${usando?'#EE7D07':'#1D5FBF'}"><div class="t">🧰 ${usando?'Com você':'Reservado'} · ${esc(fmtDH(r.de))} → ${esc(fmtDH(r.ate))}${r.servico?' · '+esc(r.servico):''}</div>
-    <div class="s">${esc(r.nomes)}</div>${r.funcionario!==u.nome?`<div class="s">Para ${esc(r.funcionario)}</div>`:''}
+    <div class="s">${esc(r.nomes)}</div>${!ehEu(r.funcionario)?`<div class="s">Para ${esc(r.funcionario)}</div>`:''}
     <div class="acts">${usando?`<button data-eqenc="${esc(r.id)}">Devolvi</button>`:`<button data-eqenc="${esc(r.id)}" data-canc="1">Cancelar</button>`}</div></div>`; }).join('');
   if(outros.length) h+=`<div class="hint" style="margin:8px 4px 0">${outros.length} reserva(s) de equipamento em uso agora por outras pessoas. <button class="lnk" data-eqver="1" style="float:none">Ver equipamentos</button></div>`;
   el.innerHTML=h||'<div class="vazio">Nenhuma reserva de equipamento sua. Toque em "+ Reservar" ou escolha os equipamentos ao reservar o carro.</div>';
