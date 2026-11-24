@@ -2448,6 +2448,7 @@ async function abreQR(){
 let RS_EQ=new Set(), EQR_SEL=new Set(), eqSetor='', eqEdId='', eqEdFoto='';
 const EQS=()=>(INI&&INI.equipamentos)||[], RESEQ=()=>(INI&&INI.reservasEquip)||[];
 const eqPorId=id=>EQS().find(e=>e.id===id);
+const nomesRes=r=>(r.ids||[]).map(i=>(eqPorId(i)||{}).nome).filter(Boolean).join(', ')||r.nomes;
 function iconeEq(n){ n=String(n||'').toLowerCase();
   return /mavic|mini 2|air 3s|drone/.test(n)?'🚁':/c[aâ]mera|canon|kodak|sx540/.test(n)?'📷':/trena|fissur|paqu|prumo|n[ií]vel|pacometro/.test(n)?'📏':/gps|gpsmap|r980|sp60|spot x|trimble/.test(n)?'📡':/pilha|bateria|carregador/.test(n)?'🔋':/poco|celular/.test(n)?'📱':/notebook/.test(n)?'💻':/microfone/.test(n)?'🎙️':/bolsa/.test(n)?'🎒':/capacete|luva/.test(n)?'⛑️':/escada/.test(n)?'🪜':/lanterna/.test(n)?'🔦':/bin[oó]culo/.test(n)?'🔭':/r[aá]dio/.test(n)?'📻':/cone/.test(n)?'🚧':/trip[eé]/.test(n)?'🎥':/alicate|chave|testador|mili|medidor|amper/.test(n)?'⚡':'🧰'; }
 function fotoEqHtml(e){ return `<div class="eqF">${e.foto?`<img data-eqf="${esc(e.foto)}" alt="" style="display:none">`:''}<span>${iconeEq(e.nome)}</span></div>`; }
@@ -2476,7 +2477,7 @@ function pintaEqHome(){
   const mine=RESEQ().filter(r=>ehEu(r.funcionario,r.criadoPor));
   const outros=RESEQ().filter(r=>!mine.includes(r)&&r.de<=ag);
   let h=mine.map(r=>{ const usando=r.de<=ag; return `<div class="item" style="border-left-color:${usando?'#EE7D07':'#1D5FBF'}"><div class="t">🧰 ${usando?'Com você':'Reservado'} · ${esc(fmtDH(r.de))} → ${esc(fmtDH(r.ate))}${r.servico?' · '+esc(r.servico):''}</div>
-    <div class="s">${esc(r.nomes)}</div>${!ehEu(r.funcionario)?`<div class="s">Para ${esc(r.funcionario)}</div>`:''}
+    <div class="s">${esc(nomesRes(r))}</div>${!ehEu(r.funcionario)?`<div class="s">Para ${esc(r.funcionario)}</div>`:''}
     <div class="acts">${usando?`<button data-eqenc="${esc(r.id)}">Devolvi</button>`:`<button data-eqenc="${esc(r.id)}" data-canc="1">Cancelar</button>`}</div></div>`; }).join('');
   if(outros.length) h+=`<div class="hint" style="margin:8px 4px 0">${outros.length} reserva(s) de equipamento em uso agora por outras pessoas. <button class="lnk" data-eqver="1" style="float:none">Ver equipamentos</button></div>`;
   el.innerHTML=h||'<div class="vazio">Nenhuma reserva de equipamento sua. Toque em "+ Reservar" ou escolha os equipamentos ao reservar o carro.</div>';
@@ -2484,7 +2485,7 @@ function pintaEqHome(){
 document.addEventListener('click',async e=>{ const d=e.target.dataset||{};
   if(d.eqver) abreEquip();
   if(d.eqenc){ const r=RESEQ().find(x=>x.id===d.eqenc); if(!r) return;
-    if(!confirmar(d.canc?`Cancelar a reserva de: ${r.nomes}?`:`Confirmar a devolução de: ${r.nomes}?`)) return;
+    if(!confirmar(d.canc?`Cancelar a reserva de: ${nomesRes(r)}?`:`Confirmar a devolução de: ${nomesRes(r)}?`)) return;
     try{ await api('encerrarEquip',{id:d.eqenc,cancelar:!!d.canc}); toast(d.canc?'Reserva cancelada':'Devolução registrada ✔'); await carregaInicio(); renderHome(); if($('vEquip').classList.contains('on')) pintaEquip(); }catch(err){ toast('Erro: '+err.message,4000); } }
 });
 function abreEquip(){ document.body.classList.add('emForm'); $('resumoBar').style.display='none'; $('titulo').textContent='Equipamentos'; mostra('vEquip'); pintaEquip(); carregaInicio().then(pintaEquip).catch(()=>{}); }
