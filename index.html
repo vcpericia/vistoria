@@ -154,6 +154,8 @@ body.rascunho .rascBox{display:block}
 .thumbs i{position:absolute;left:0;right:0;bottom:0;font-size:9px;font-style:normal;font-weight:700;color:#fff;background:#1F2630cc;border-radius:0 0 7px 7px;text-align:center;padding:1px 0}
 .thumbs i.pend{background:#B35C00e6}
 #btnPainel{display:none} body.admin #btnPainel{display:grid}
+.soAdm{display:none!important} body.admin .soAdm{display:flex!important}
+label .lnk,.hint .lnk{border:0;background:none;color:var(--laranja);font-weight:800;font-size:12px;cursor:pointer;padding:0}
 .pFiltros{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
 .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 @media (min-width:600px){.kpis{grid-template-columns:repeat(3,1fr)}}
@@ -221,7 +223,20 @@ body.emForm .topo .voltar{display:grid}
 .veic.uso svg.ic{color:var(--laranja)}
 .veic h4{margin:0;font-size:16px;font-weight:800;letter-spacing:.03em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .chip{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.02em}
-.chip.ok{background:#E8F6EE;color:var(--ok)}.chip.ind{background:#ECEEF2;color:#5B6573}.cB{background:#EDEFF3;color:#5B6573;border:1.5px dashed #AEB6C1!important}
+.chip.ok{background:#E8F6EE;color:var(--ok)}
+.eqL{display:flex;align-items:center;gap:11px;padding:9px 4px;border-bottom:1px solid #F0F2F5;cursor:pointer}.eqL:last-child{border-bottom:0}
+.eqF{width:52px;height:52px;border-radius:12px;background:#F1F3F6;flex:0 0 52px;display:grid;place-items:center;font-size:24px;overflow:hidden}.eqF img{width:100%;height:100%;object-fit:cover}
+.eqL .tx{flex:1;min-width:0}.eqL .tx b{display:block;font-size:14px;line-height:1.25}.eqL .tx small{display:block;color:var(--sub);font-size:11.5px;margin-top:2px}
+.eqSt{font-size:10.5px;font-weight:700;border-radius:20px;padding:3px 8px;white-space:nowrap;flex:0 0 auto}.eqSt.liv{background:#E8F6EE;color:var(--ok)}.eqSt.uso{background:#FFF1E0;color:#B35C00}.eqSt.res{background:#EAF1FD;color:#1D5FBF}.eqSt.man{background:#ECEEF2;color:#5B6573}
+.eqFilt{display:flex;gap:6px;margin:10px 0 4px;flex-wrap:wrap}.eqFilt button{border:1.5px solid var(--borda);background:#fff;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--sub)}.eqFilt button.on{border-color:var(--laranja);color:#B35C00;background:var(--laranjaClaro)}
+.eqPick{max-height:46vh;overflow:auto;border:1.5px solid var(--borda);border-radius:12px;padding:2px 10px;margin-top:8px}
+.eqPick .eqL{padding:7px 2px}.eqPick .eqF{width:40px;height:40px;flex-basis:40px;font-size:19px;border-radius:10px}
+.eqPick .eqL.sel{background:var(--laranjaClaro);border-radius:10px}.eqPick .eqL.off{opacity:.45;cursor:not-allowed}
+.eqChk{width:22px;height:22px;border-radius:7px;border:2px solid var(--borda);flex:0 0 22px;display:grid;place-items:center;font-size:14px;color:#fff}.eqL.sel .eqChk{background:var(--laranja);border-color:var(--laranja)}
+.eqSelInfo{font-size:12.5px;color:var(--sub);margin-top:6px}.eqSelInfo b{color:var(--txt)}
+.eqDetF{width:100%;max-height:240px;object-fit:contain;border-radius:14px;background:#F1F3F6;display:block;margin:4px 0 10px}
+.eqDetI{font-size:52px;text-align:center;background:#F1F3F6;border-radius:14px;padding:24px 0;margin:4px 0 10px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13.5px}.kv span{color:var(--sub)}.chip.ind{background:#ECEEF2;color:#5B6573}.cB{background:#EDEFF3;color:#5B6573;border:1.5px dashed #AEB6C1!important}
 .indInfo{grid-column:1/-1;margin-top:6px;font-size:12.5px;line-height:1.45;background:#F4F5F7;border-left:3px solid #8A94A3;border-radius:8px;padding:7px 10px;color:var(--txt)}
 .admLnk{grid-column:1/-1;margin-top:6px;font-size:12px;text-align:right}.admLnk button{border:0;background:none;color:var(--sub);font-weight:700;font-size:12px;padding:2px 0;cursor:pointer;text-decoration:underline}.chip.atr{background:#FDECEA;color:#C0392B}
 .resInfo{font-size:12.5px;color:var(--sub);background:#F4F7FB;border-radius:12px;padding:9px 11px;margin:8px 0 2px;line-height:1.5;display:none}.resInfo.on{display:block}
@@ -323,6 +338,16 @@ input:focus,select:focus,textarea:focus{background-color:#1B222B}
 .veic{background-color:#1B222B;border:1px solid #3A4451}
 .veic svg.ic{color:#E6EAF0}
 .chip.ok{background-color:#1C3F2B}
+.eqL{border-bottom:1px solid #3A4451}
+.eqF{background-color:#232B35}
+.eqSt.liv{background-color:#1C3F2B}
+.eqSt.uso{background-color:#3F301C;color:#F5A04A}
+.eqSt.res{background-color:#1C293F;color:#8AB4F8}
+.eqSt.man{background-color:#232B35;color:#AEB6C1}
+.eqFilt button{background-color:#1B222B}
+.eqFilt button.on{color:#F5A04A}
+.eqDetF{background-color:#232B35}
+.eqDetI{background-color:#232B35}
 .chip.ind{background-color:#232B35;color:#AEB6C1}
 .cB{background-color:#232B35;color:#AEB6C1;border:1.5px dashed #3A4451!important}
 .indInfo{background-color:#232B35}
@@ -393,6 +418,8 @@ input:focus,select:focus,textarea:focus{background-color:#1B222B}
   <div class="frota" id="frota"></div>
   <div class="secT">Próximas reservas <button class="lnk" id="btnReservar">+ Reservar</button><button class="lnk" id="btnAgenda" style="margin-right:14px">📅 Semana</button></div>
   <div id="reservas"></div>
+  <div class="secT">Equipamentos <button class="lnk" id="btnEqRes">+ Reservar</button><button class="lnk" id="btnEqVer" style="margin-right:14px">🧰 Ver todos</button></div>
+  <div id="eqHome"></div>
   <div class="secT">Últimas viagens</div>
   <div id="ultimas"></div>
   <div class="rodape"><svg viewBox="0 0 453.56 301" style="color:var(--escuro)"><use href="#logoVCP"/></svg>Vinícius Coutinho Consultoria e Perícia</div>
@@ -526,6 +553,16 @@ input:focus,select:focus,textarea:focus{background-color:#1B222B}
 </div>
 
 <!-- ================= PAINEL (ADMIN) ================= -->
+<div class="view" id="vEquip">
+  <div class="card">
+    <h2><span class="n">🧰</span>Equipamentos<button class="btn peq soAdm" id="eqNovo" style="margin:0 0 0 auto">+ Novo</button></h2>
+    <input id="eqBusca" placeholder="Buscar por nome, código ou nº de série">
+    <div class="eqFilt" id="eqFilt"></div>
+    <div id="eqLista"></div>
+  </div>
+  <button class="btn" id="eqResBtn2">Reservar equipamentos</button>
+</div>
+
 <div class="view" id="vAgenda">
   <div class="card">
     <h2><span class="n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" style="width:14px;height:14px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>Agenda da frota</h2>
@@ -623,6 +660,40 @@ input:focus,select:focus,textarea:focus{background-color:#1B222B}
   <button class="btn sec" id="indCancelar">Cancelar</button>
 </div></div>
 
+<div class="modalBg" id="mEqRes"><div class="modal">
+  <h3><span class="n">🧰</span>Reservar equipamentos</h3>
+  <div class="row"><div><label>Retirada</label><input type="date" id="eqrD1"></div><div><label>Hora</label><input type="time" id="eqrH1" value="07:30"></div></div>
+  <div class="row"><div><label>Devolução</label><input type="date" id="eqrD2"></div><div><label>Hora</label><input type="time" id="eqrH2" value="17:30"></div></div>
+  <div class="row"><div><label>Funcionário</label><input id="eqrFunc" list="dlFunc"></div><div><label>Nº do serviço</label><input id="eqrServ" placeholder="Ex.: 29951" inputmode="numeric"></div></div>
+  <label>Equipamentos</label><input id="eqrBusca" placeholder="Buscar…">
+  <div class="eqPick" id="eqrLista"></div><div class="eqSelInfo" id="eqrInfo"></div>
+  <div class="status" id="stEqr"></div>
+  <button class="btn" id="eqrSalvar">Reservar</button>
+  <button class="btn sec" id="eqrCancelar">Cancelar</button>
+</div></div>
+
+<div class="modalBg" id="mEqDet"><div class="modal">
+  <h3><span class="n">🧰</span><span id="eqdTit"></span></h3>
+  <div id="eqdCorpo"></div>
+  <button class="btn" id="eqdRes">Reservar este equipamento</button>
+  <button class="btn sec soAdm" id="eqdEd">Editar</button>
+  <button class="btn sec" id="eqdFechar">Fechar</button>
+</div></div>
+
+<div class="modalBg" id="mEqEd"><div class="modal">
+  <h3><span class="n">✏️</span><span id="eqeTit">Equipamento</span></h3>
+  <label>Nome</label><input id="eqeNome">
+  <div class="row"><div><label>Código VCP</label><input id="eqeCod"></div><div><label>Setor</label><input id="eqeSetor" list="dlSetor"><datalist id="dlSetor"><option value="Engenharia"><option value="Geotec"></datalist></div></div>
+  <div class="row"><div><label>Nº de série</label><input id="eqeSerie"></div><div><label>Aquisição</label><input id="eqeAq" placeholder="dd/mm/aaaa"></div></div>
+  <label>Observação / orientação de uso</label><textarea id="eqeObs"></textarea>
+  <label>Situação</label><select id="eqeSit"><option value="ATIVO">Ativo (pode ser reservado)</option><option value="MANUTENCAO">Em manutenção</option><option value="BAIXADO">Baixado (some da lista)</option></select>
+  <label>Foto</label><div class="row"><button class="btn sec" id="eqeFotoBt" style="margin-top:0">📷 Tirar / escolher foto</button><input id="eqeUrl" placeholder="ou cole o link de uma imagem"></div>
+  <input type="file" id="eqeFoto" accept="image/*" style="display:none"><div class="hint" id="eqeFotoInfo"></div>
+  <div class="status" id="stEqe"></div>
+  <button class="btn" id="eqeSalvar">Salvar</button>
+  <button class="btn sec" id="eqeCancelar">Cancelar</button>
+</div></div>
+
 <div class="modalBg" id="mReserva"><div class="modal">
   <h3><span class="n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>Reservar veículo</h3>
   <label>Veículo</label><select id="rsVeic"></select>
@@ -632,7 +703,8 @@ input:focus,select:focus,textarea:focus{background-color:#1B222B}
   <label>Serviço / motivo</label><input id="rsMot" placeholder="Ex.: Avaliação Dourados">
   <label>Destino</label><input id="rsDest" placeholder="Cidade - UF">
   <label>Objetivo da viagem</label><textarea id="rsObj" placeholder="Ex.: Avaliação da fazenda São Francisco..."></textarea>
-  <label>Equipamentos a levar</label><textarea id="rsEquip" placeholder="Ex.: Drone, GPS, trena"></textarea>
+  <label>Equipamentos a levar <button class="lnk" id="rsEqBtn" style="float:right">📋 Escolher da lista</button></label><textarea id="rsEquip" placeholder="Ex.: Drone, GPS, trena"></textarea>
+  <div id="rsEqBox" style="display:none"><input id="rsEqBusca" placeholder="Buscar equipamento…" style="margin-top:8px"><div class="eqPick" id="rsEqLista"></div><div class="eqSelInfo" id="rsEqInfo"></div></div>
   <label>Motorista</label><input id="rsMoto" list="dlFunc">
   <label>Acompanhante</label><input id="rsAcomp" list="dlFunc" placeholder="Opcional">
   <div class="hint">📅 A reserva vira um evento na agenda "Frota VCP" do veículo, no Google Agenda.</div>
@@ -1839,7 +1911,7 @@ function renderHome(){
       <div class="info">${ab?`Com <b>${esc(ab.motoristaAtual||ab.motorista)}</b> desde ${esc(ab.saidaData)} ${esc(ab.saidaHora)}${ab.destino?' · '+esc(String(ab.destino).slice(0,40)):''}${ab.previsaoVolta?` · volta ${ab.atrasada?'era':'prevista'} ${esc(fmtDH(ab.previsaoVolta))}`:''}`:ind?'Não disponível para uso':'Pronto para sair'} · ${nav} avaria${nav===1?'':'s'} cadastrada${nav===1?'':'s'}</div>
       <div class="bts">${ab?`<button class="btn" data-abrir="${ab.id}">Abrir viagem</button>${SESS.usuario.admin?`<button class="btn verm" style="flex:0 0 auto;width:auto;padding:11px 12px" data-cancelar="${ab.id}" data-v="${vc}">Descartar</button>`:''}`:ind&&!u.admin?`<button class="btn" disabled>Indisponível</button>`:`<button class="btn" data-nova="${vc}">Iniciar vistoria</button>`}<button class="btn sec" data-reservar="${vc}" style="flex:0 0 auto;width:auto;padding:11px 12px">Reservar</button><button class="btn sec" data-frota="${vc}">Avarias</button></div>${rs.length?`<div class="resv">📅 ${rs.slice(0,2).map(r=>`${esc(fmtPer(r))} · ${esc(primeiro(r.motorista||r.reservadoPor))}${r.servico?' · '+esc(r.servico):''}`).join('<br>📅 ')}</div>`:''}${ind?`<div class="indInfo">🔧 <b>${esc(ind.motivo)}</b> · ${esc(perInd(ind))}${ind.obs?'<br>'+esc(ind.obs):''}</div>`:''}${indF?`<div class="indInfo">🔧 Ficará indisponível: <b>${esc(indF.motivo)}</b> · ${esc(perInd(indF))}</div>`:''}${u.admin?`<div class="admLnk">${ind||indF?`<button data-liberar="${esc((ind||indF).id)}" data-v="${vc}">${ind?'Liberar o veículo agora':'Cancelar a indisponibilidade'}</button>`:`<button data-ind="${vc}">🔧 Marcar como indisponível</button>`}</div>`:''}</div>`;
   }).join('');
-  pintaReservas();
+  pintaReservas(); pintaEqHome();
   const rec=(INI&&INI.recentes||[]).slice(0,5);
   $('ultimas').innerHTML = rec.length ? rec.map(itemHist).join('') : '<div class="vazio">Nenhuma viagem finalizada ainda.</div>';
 }
@@ -1884,7 +1956,8 @@ function abreReserva(veic,dia){
   const veics=(INI&&INI.veiculos)||['GOL','SAVEIRO','RANGER'];
   $('rsVeic').innerHTML=veics.map(v=>`<option${v===veic?' selected':''}>${v}</option>`).join('');
   const hoje=hojeISO(new Date()); $('rsD1').value=dia||hoje; $('rsD2').value=dia||hoje; $('rsD1').min=hoje; $('rsD2').min=hoje;
-  ['rsServ','rsMot','rsDest','rsAcomp','rsObj','rsEquip'].forEach(i=>$(i).value=''); $('rsMoto').value=SESS.usuario.nome;
+  ['rsServ','rsMot','rsDest','rsAcomp','rsObj','rsEquip','rsEqBusca'].forEach(i=>$(i).value=''); $('rsMoto').value=SESS.usuario.nome;
+  RS_EQ=new Set(); $('rsEqBox').style.display='none';
   stOff($('stRes')); $('mReserva').classList.add('on');
 }
 $('rsD1').addEventListener('change',()=>{ if($('rsD2').value<$('rsD1').value) $('rsD2').value=$('rsD1').value; });
@@ -1896,8 +1969,13 @@ $('rsSalvar').onclick=async()=>{
   if(!d.motivo&&!d.servico){ st($('stRes'),'Informe o nº do serviço ou o motivo.','erro'); return; }
   if(!d.destino){ st($('stRes'),'Informe o destino.','erro'); return; }
   $('rsSalvar').disabled=true; st($('stRes'),'Verificando a agenda do '+d.veiculo+'…','info');
-  try{ const r=await api('reservar',d); $('mReserva').classList.remove('on');
-    toast(`${d.veiculo} reservado! Evento criado no Google Agenda${r.semEmail&&r.semEmail.length?' (sem convite para '+r.semEmail.join(', ')+': ainda não entrou no app)':''}.`,5000);
+  const ini=d.dataIni+'T'+(d.horaIni||'00:00'), fim=d.dataFim+'T'+(d.horaFim||'23:59');
+  if(RS_EQ.size){ const oc=[...RS_EQ].map(i=>ocupado(i,ini,fim)).filter(Boolean); if(oc.length){ st($('stRes'),'Equipamento já reservado nesse período: '+oc.join('; '),'erro'); return; } }
+  try{ const r=await api('reservar',d); let extra='';
+    if(RS_EQ.size){ try{ await api('reservarEquip',{ids:[...RS_EQ],de:ini,ate:fim,funcionario:d.motorista,servico:d.servico,reservaId:r.reserva&&r.reserva.id}); extra=' + '+RS_EQ.size+' equipamento(s)'; }
+      catch(e2){ await carregaInicio(); renderHome(); st($('stRes'),'O '+d.veiculo+' foi reservado, mas os equipamentos não: '+e2.message,'erro'); return; } }
+    $('mReserva').classList.remove('on');
+    toast(`${d.veiculo} reservado${extra}! Evento criado no Google Agenda${r.semEmail&&r.semEmail.length?' (sem convite para '+r.semEmail.join(', ')+': ainda não entrou no app)':''}.`,5000);
     await carregaInicio(); renderHome(); }
   catch(e){ st($('stRes'),semRede(e)?'Sem internet: a reserva precisa de conexão.':e.message,'erro'); }
   finally{ $('rsSalvar').disabled=false; }
@@ -2066,7 +2144,7 @@ async function irHome(recarregar){
   document.body.classList.remove('emForm'); $('resumoBar').style.display='none'; $('titulo').textContent='Vistoria de Veículo';
   mostra('vHome'); if(INI) renderHome(); if(recarregar){ await carregaInicio(); renderHome(); }
 }
-function mostra(id){ ['vHome','vForm','vHist','vPainel','vAgenda'].forEach(v=>$(v).classList.toggle('on',v===id)); window.scrollTo(0,0); }
+function mostra(id){ ['vHome','vForm','vHist','vPainel','vAgenda','vEquip'].forEach(v=>$(v).classList.toggle('on',v===id)); window.scrollTo(0,0); }
 
 async function novaVistoria(veic){
   if(V && V.id){ if(pendente()) { await sincroniza(); }
@@ -2360,6 +2438,120 @@ async function abreQR(){
   }
   await novaVistoria(v); if(V&&V.veiculo===v&&V.status==='rascunho'){ marcaCheckin('checkinQR'); toast('📷 '+v+': vistoria de saída iniciada pelo QR Code.',3500); }
 }
+
+/* =================== EQUIPAMENTOS =================== */
+let RS_EQ=new Set(), EQR_SEL=new Set(), eqSetor='', eqEdId='', eqEdFoto='';
+const EQS=()=>(INI&&INI.equipamentos)||[], RESEQ=()=>(INI&&INI.reservasEquip)||[];
+const eqPorId=id=>EQS().find(e=>e.id===id);
+function iconeEq(n){ n=String(n||'').toLowerCase();
+  return /mavic|mini 2|air 3s|drone/.test(n)?'🚁':/c[aâ]mera|canon|kodak|sx540/.test(n)?'📷':/trena|fissur|paqu|prumo|n[ií]vel|pacometro/.test(n)?'📏':/gps|gpsmap|r980|sp60|spot x|trimble/.test(n)?'📡':/pilha|bateria|carregador/.test(n)?'🔋':/poco|celular/.test(n)?'📱':/notebook/.test(n)?'💻':/microfone/.test(n)?'🎙️':/bolsa/.test(n)?'🎒':/capacete|luva/.test(n)?'⛑️':/escada/.test(n)?'🪜':/lanterna/.test(n)?'🔦':/bin[oó]culo/.test(n)?'🔭':/r[aá]dio/.test(n)?'📻':/cone/.test(n)?'🚧':/trip[eé]/.test(n)?'🎥':/alicate|chave|testador|mili|medidor|amper/.test(n)?'⚡':'🧰'; }
+function fotoEqHtml(e){ return `<div class="eqF">${e.foto?`<img data-eqf="${esc(e.foto)}" alt="" style="display:none">`:''}<span>${iconeEq(e.nome)}</span></div>`; }
+let fotoFila=Promise.resolve();
+function carregaFotosEq(raiz){
+  (raiz||document).querySelectorAll('img[data-eqf]').forEach(img=>{ const id=img.dataset.eqf; const mostra=src=>{ img.src=src; img.style.display=''; const sp=img.nextElementSibling; if(sp) sp.style.display='none'; };
+    const c=LS.get('vcp_eqf_'+id,null); if(c){ mostra(c); return; }
+    fotoFila=fotoFila.then(async()=>{ const c2=LS.get('vcp_eqf_'+id,null); if(c2) return mostra(c2);
+      try{ const r=await api('equipFoto',{id}); const mini=await miniatura(r.b64,320); try{ LS.set('vcp_eqf_'+id,mini); }catch(e){} mostra(mini); }catch(e){} }); });
+}
+function miniatura(src,max){ return new Promise(res=>{ const im=new Image(); im.onload=()=>{ const k=Math.min(1,max/Math.max(im.width,im.height)); const c=document.createElement('canvas'); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext('2d').drawImage(im,0,0,c.width,c.height); res(c.toDataURL('image/jpeg',0.78)); }; im.onerror=()=>res(src); im.src=src; }); }
+/** reserva que ocupa o equipamento no período (texto) ou '' */
+function ocupado(id,de,ate,ignorar){ const r=RESEQ().find(x=>x.id!==ignorar&&x.ids.includes(id)&&x.de<ate&&x.ate>de); const e=eqPorId(id);
+  if(e&&e.situacao!=='ATIVO') return (e.nome||'')+' (em manutenção)';
+  return r?`${e?e.nome:id} (com ${primeiro(r.funcionario)} ${fmtDH(r.de)}–${fmtDH(r.ate)})`:''; }
+function statusEq(e){ const ag=agoraISO(); if(e.situacao!=='ATIVO') return ['man','Manutenção'];
+  const uso=RESEQ().find(r=>r.ids.includes(e.id)&&r.de<=ag&&r.ate>ag); if(uso) return ['uso','Com '+primeiro(uso.funcionario)+' até '+fmtDH(uso.ate)];
+  const prox=RESEQ().find(r=>r.ids.includes(e.id)&&r.de>ag); if(prox) return ['res','Reservado '+fmtDH(prox.de)];
+  return ['liv','Livre']; }
+function filtraEq(lista,busca){ const q=String(busca||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim(); if(!q) return lista;
+  return lista.filter(e=>[e.nome,e.codigo,e.serie,e.setor].join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q)); }
+function pintaEqHome(){
+  const el=$('eqHome'); if(!el) return; const u=SESS.usuario; const ag=agoraISO();
+  const mine=RESEQ().filter(r=>r.funcionario===u.nome||r.criadoPor===u.nome);
+  const outros=RESEQ().filter(r=>!mine.includes(r)&&r.de<=ag);
+  let h=mine.map(r=>{ const usando=r.de<=ag; return `<div class="item" style="border-left-color:${usando?'#EE7D07':'#1D5FBF'}"><div class="t">🧰 ${usando?'Com você':'Reservado'} · ${esc(fmtDH(r.de))} → ${esc(fmtDH(r.ate))}${r.servico?' · '+esc(r.servico):''}</div>
+    <div class="s">${esc(r.nomes)}</div>${r.funcionario!==u.nome?`<div class="s">Para ${esc(r.funcionario)}</div>`:''}
+    <div class="acts">${usando?`<button data-eqenc="${esc(r.id)}">Devolvi</button>`:`<button data-eqenc="${esc(r.id)}" data-canc="1">Cancelar</button>`}</div></div>`; }).join('');
+  if(outros.length) h+=`<div class="hint" style="margin:8px 4px 0">${outros.length} reserva(s) de equipamento em uso agora por outras pessoas. <button class="lnk" data-eqver="1" style="float:none">Ver equipamentos</button></div>`;
+  el.innerHTML=h||'<div class="vazio">Nenhuma reserva de equipamento sua. Toque em "+ Reservar" ou escolha os equipamentos ao reservar o carro.</div>';
+}
+document.addEventListener('click',async e=>{ const d=e.target.dataset||{};
+  if(d.eqver) abreEquip();
+  if(d.eqenc){ const r=RESEQ().find(x=>x.id===d.eqenc); if(!r) return;
+    if(!confirmar(d.canc?`Cancelar a reserva de: ${r.nomes}?`:`Confirmar a devolução de: ${r.nomes}?`)) return;
+    try{ await api('encerrarEquip',{id:d.eqenc,cancelar:!!d.canc}); toast(d.canc?'Reserva cancelada':'Devolução registrada ✔'); await carregaInicio(); renderHome(); if($('vEquip').classList.contains('on')) pintaEquip(); }catch(err){ toast('Erro: '+err.message,4000); } }
+});
+function abreEquip(){ document.body.classList.add('emForm'); $('resumoBar').style.display='none'; $('titulo').textContent='Equipamentos'; mostra('vEquip'); pintaEquip(); carregaInicio().then(pintaEquip).catch(()=>{}); }
+function pintaEquip(){
+  const setores=[...new Set(EQS().map(e=>e.setor).filter(Boolean))].sort();
+  $('eqFilt').innerHTML=['',...setores].map(s=>`<button data-eqset="${esc(s)}" class="${s===eqSetor?'on':''}">${s?esc(s):'Todos'}</button>`).join('');
+  const lista=filtraEq(EQS().filter(e=>!eqSetor||e.setor===eqSetor),$('eqBusca').value);
+  $('eqLista').innerHTML=lista.length?lista.map(e=>{ const [c,t]=statusEq(e); return `<div class="eqL" data-eqdet="${esc(e.id)}">${fotoEqHtml(e)}<div class="tx"><b>${esc(e.nome)}</b><small>${[e.codigo,e.setor].filter(Boolean).map(esc).join(' · ')}</small></div><span class="eqSt ${c}">${esc(t)}</span></div>`; }).join('')
+    :'<div class="vazio">Nenhum equipamento encontrado.</div>';
+  carregaFotosEq($('eqLista'));
+}
+$('btnEqVer').onclick=abreEquip;
+$('eqBusca').addEventListener('input',pintaEquip);
+$('eqFilt').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; eqSetor=b.dataset.eqset; pintaEquip(); });
+$('eqLista').addEventListener('click',e=>{ const l=e.target.closest('[data-eqdet]'); if(l) abreEqDet(l.dataset.eqdet); });
+function abreEqDet(id){ const e=eqPorId(id); if(!e) return; const [c,t]=statusEq(e); const ag=agoraISO();
+  $('eqdTit').textContent=e.nome; $('eqdRes').dataset.id=id; $('eqdEd').dataset.id=id;
+  const prox=RESEQ().filter(r=>r.ids.includes(id)&&r.ate>ag).slice(0,5);
+  $('eqdCorpo').innerHTML=(e.foto?`<img class="eqDetF" data-eqf="${esc(e.foto)}" style="display:none"><div class="eqDetI">${iconeEq(e.nome)}</div>`:`<div class="eqDetI">${iconeEq(e.nome)}</div>`)+
+    `<div style="margin-bottom:10px"><span class="eqSt ${c}">${esc(t)}</span></div><div class="kv">${[['Código VCP',e.codigo],['Setor',e.setor],['Nº de série',e.serie],['Aquisição',e.aquisicao]].filter(x=>x[1]).map(x=>`<span>${x[0]}</span><b>${esc(x[1])}</b>`).join('')}</div>`+
+    (e.obs?`<div class="resInfo on" style="margin-top:10px">ℹ️ ${esc(e.obs)}</div>`:'')+
+    (prox.length?`<h5 style="margin:14px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--sub)">Próximas reservas</h5>`+prox.map(r=>`<div class="s" style="font-size:13px;margin:3px 0">📅 ${esc(fmtDH(r.de))} → ${esc(fmtDH(r.ate))} · ${esc(r.funcionario)}${r.servico?' · '+esc(r.servico):''}</div>`).join(''):'');
+  $('eqdRes').style.display=e.situacao==='ATIVO'?'':'none'; $('mEqDet').classList.add('on'); carregaFotosEq($('eqdCorpo'));
+}
+$('eqdFechar').onclick=()=>$('mEqDet').classList.remove('on');
+$('eqdRes').onclick=()=>{ $('mEqDet').classList.remove('on'); abreEqRes([$('eqdRes').dataset.id]); };
+// seletor (usado na reserva de equipamentos e na reserva do carro)
+function pintaPicker(cont,info,sel,de,ate,busca){
+  const lista=filtraEq(EQS().filter(e=>e.situacao!=='BAIXADO'),busca).sort((x,y)=>(sel.has(y.id)?1:0)-(sel.has(x.id)?1:0));
+  cont.innerHTML=lista.map(e=>{ const oc=de&&ate?ocupado(e.id,de,ate):''; const on=sel.has(e.id);
+    return `<div class="eqL ${on?'sel':''} ${oc&&!on?'off':''}" data-eqp="${esc(e.id)}" ${oc&&!on?'data-oc="1"':''}><div class="eqChk">${on?'✓':''}</div>${fotoEqHtml(e)}<div class="tx"><b>${esc(e.nome)}</b><small>${oc?'⛔ '+esc(oc.replace(e.nome+' ','')):esc([e.codigo,e.setor].filter(Boolean).join(' · '))}</small></div></div>`; }).join('')||'<div class="vazio">Nada encontrado.</div>';
+  info.innerHTML=sel.size?`<b>${sel.size} selecionado(s):</b> ${esc([...sel].map(i=>(eqPorId(i)||{}).nome).join(', '))}`:'Toque para selecionar.';
+  carregaFotosEq(cont);
+}
+function eqrPer(){ return [$('eqrD1').value+'T'+($('eqrH1').value||'00:00'), $('eqrD2').value+'T'+($('eqrH2').value||'23:59')]; }
+function pintaEqr(){ const [de,ate]=eqrPer(); pintaPicker($('eqrLista'),$('eqrInfo'),EQR_SEL,de,ate,$('eqrBusca').value); }
+function abreEqRes(pre){ const d=new Date(); $('eqrD1').value=hojeISO(d); $('eqrD2').value=hojeISO(d); $('eqrD1').min=hojeISO(d); $('eqrD2').min=hojeISO(d);
+  $('eqrFunc').value=SESS.usuario.nome; $('eqrServ').value=''; $('eqrBusca').value=''; EQR_SEL=new Set(pre||[]); stOff($('stEqr')); montaDatalist(); pintaEqr(); $('mEqRes').classList.add('on'); }
+$('btnEqRes').onclick=()=>abreEqRes(); $('eqResBtn2').onclick=()=>abreEqRes();
+['eqrD1','eqrH1','eqrD2','eqrH2'].forEach(i=>$(i).addEventListener('change',()=>{ if(i==='eqrD1'&&$('eqrD2').value<$('eqrD1').value) $('eqrD2').value=$('eqrD1').value; pintaEqr(); }));
+$('eqrBusca').addEventListener('input',pintaEqr);
+$('eqrLista').addEventListener('click',e=>{ const l=e.target.closest('[data-eqp]'); if(!l) return; if(l.dataset.oc){ toast('Já reservado nesse período: '+l.querySelector('small').textContent.replace('⛔ ',''),3500); return; }
+  const id=l.dataset.eqp; EQR_SEL.has(id)?EQR_SEL.delete(id):EQR_SEL.add(id); pintaEqr(); });
+$('eqrCancelar').onclick=()=>$('mEqRes').classList.remove('on');
+$('eqrSalvar').onclick=async()=>{ const [de,ate]=eqrPer();
+  if(!EQR_SEL.size){ st($('stEqr'),'Escolha pelo menos um equipamento.','erro'); return; }
+  if(ate<=de){ st($('stEqr'),'A devolução precisa ser depois da retirada.','erro'); return; }
+  $('eqrSalvar').disabled=true; st($('stEqr'),'Reservando…','info');
+  try{ await api('reservarEquip',{ids:[...EQR_SEL],de,ate,funcionario:$('eqrFunc').value.trim(),servico:$('eqrServ').value.trim()});
+    $('mEqRes').classList.remove('on'); toast(EQR_SEL.size+' equipamento(s) reservado(s) ✔'); await carregaInicio(); renderHome(); if($('vEquip').classList.contains('on')) pintaEquip(); }
+  catch(e){ st($('stEqr'),semRede(e)?'Sem internet: a reserva precisa de conexão.':e.message,'erro'); }
+  finally{ $('eqrSalvar').disabled=false; } };
+// dentro da reserva do carro
+function rsPer(){ return [$('rsD1').value+'T'+($('rsH1').value||'00:00'), $('rsD2').value+'T'+($('rsH2').value||'23:59')]; }
+function pintaRsEq(){ const [de,ate]=rsPer(); pintaPicker($('rsEqLista'),$('rsEqInfo'),RS_EQ,de,ate,$('rsEqBusca').value); }
+$('rsEqBtn').onclick=e=>{ e.preventDefault(); const b=$('rsEqBox'); b.style.display=b.style.display==='none'?'':'none'; if(b.style.display==='') pintaRsEq(); };
+['rsD1','rsH1','rsD2','rsH2'].forEach(i=>$(i).addEventListener('change',()=>{ if($('rsEqBox').style.display==='') pintaRsEq(); }));
+$('rsEqBusca').addEventListener('input',pintaRsEq);
+$('rsEqLista').addEventListener('click',e=>{ const l=e.target.closest('[data-eqp]'); if(!l) return; if(l.dataset.oc){ toast('Já reservado nesse período: '+l.querySelector('small').textContent.replace('⛔ ',''),3500); return; }
+  const id=l.dataset.eqp; RS_EQ.has(id)?RS_EQ.delete(id):RS_EQ.add(id); $('rsEquip').value=[...RS_EQ].map(i=>(eqPorId(i)||{}).nome).join(', '); pintaRsEq(); });
+// cadastro (administradores)
+function abreEqEd(id){ const e=id?eqPorId(id):null; eqEdId=id||''; eqEdFoto='';
+  $('eqeTit').textContent=e?'Editar equipamento':'Novo equipamento'; $('eqeNome').value=e?e.nome:''; $('eqeCod').value=e?e.codigo:''; $('eqeSetor').value=e?e.setor:''; $('eqeSerie').value=e?e.serie:''; $('eqeAq').value=e?e.aquisicao:''; $('eqeObs').value=e?e.obs:''; $('eqeSit').value=e?e.situacao:'ATIVO'; $('eqeUrl').value=''; $('eqeFotoInfo').textContent=e&&e.foto?'Já tem foto. Escolha outra para trocar.':''; stOff($('stEqe')); $('mEqEd').classList.add('on'); }
+$('eqNovo').onclick=()=>abreEqEd('');
+$('eqdEd').onclick=()=>{ $('mEqDet').classList.remove('on'); abreEqEd($('eqdEd').dataset.id); };
+$('eqeCancelar').onclick=()=>$('mEqEd').classList.remove('on');
+$('eqeFotoBt').onclick=e=>{ e.preventDefault(); $('eqeFoto').click(); };
+$('eqeFoto').onchange=async()=>{ const f=$('eqeFoto').files[0]; if(!f) return; const url=await new Promise(r=>{ const fr=new FileReader(); fr.onload=()=>r(fr.result); fr.readAsDataURL(f); }); eqEdFoto=await miniatura(url,1000); $('eqeFotoInfo').textContent='Foto escolhida ✔'; $('eqeFoto').value=''; };
+$('eqeSalvar').onclick=async()=>{ if(!$('eqeNome').value.trim()){ st($('stEqe'),'Informe o nome.','erro'); return; }
+  $('eqeSalvar').disabled=true; st($('stEqe'),'Salvando…','info');
+  try{ const r=await api('salvarEquip',{id:eqEdId,nome:$('eqeNome').value,codigo:$('eqeCod').value,setor:$('eqeSetor').value,serie:$('eqeSerie').value,aquisicao:$('eqeAq').value,obs:$('eqeObs').value,situacao:$('eqeSit').value,fotoB64:eqEdFoto||'',fotoUrl:eqEdFoto?'':$('eqeUrl').value.trim()});
+    $('mEqEd').classList.remove('on'); toast('Equipamento salvo ✔'); await carregaInicio(); pintaEquip(); }
+  catch(e){ st($('stEqe'),semRede(e)?'Sem internet.':e.message,'erro'); }
+  finally{ $('eqeSalvar').disabled=false; } };
 
 /* =================== veículo indisponível =================== */
 const indDe=v=>((INI&&INI.indisponiveis)||[]).filter(b=>b.veiculo===v&&(!b.ate||b.ate>agoraISO()));
