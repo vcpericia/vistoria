@@ -2446,12 +2446,14 @@ const eqPorId=id=>EQS().find(e=>e.id===id);
 function iconeEq(n){ n=String(n||'').toLowerCase();
   return /mavic|mini 2|air 3s|drone/.test(n)?'🚁':/c[aâ]mera|canon|kodak|sx540/.test(n)?'📷':/trena|fissur|paqu|prumo|n[ií]vel|pacometro/.test(n)?'📏':/gps|gpsmap|r980|sp60|spot x|trimble/.test(n)?'📡':/pilha|bateria|carregador/.test(n)?'🔋':/poco|celular/.test(n)?'📱':/notebook/.test(n)?'💻':/microfone/.test(n)?'🎙️':/bolsa/.test(n)?'🎒':/capacete|luva/.test(n)?'⛑️':/escada/.test(n)?'🪜':/lanterna/.test(n)?'🔦':/bin[oó]culo/.test(n)?'🔭':/r[aá]dio/.test(n)?'📻':/cone/.test(n)?'🚧':/trip[eé]/.test(n)?'🎥':/alicate|chave|testador|mili|medidor|amper/.test(n)?'⚡':'🧰'; }
 function fotoEqHtml(e){ return `<div class="eqF">${e.foto?`<img data-eqf="${esc(e.foto)}" alt="" style="display:none">`:''}<span>${iconeEq(e.nome)}</span></div>`; }
-let fotoFila=Promise.resolve();
+const fotoPend={}; let fotoAtivas=0; const fotoFila=[];
+function aplicaFotoEq(id,src){ document.querySelectorAll('img[data-eqf="'+id+'"]').forEach(img=>{ img.src=src; img.style.display=''; const sp=img.nextElementSibling; if(sp&&sp.tagName!=='IMG') sp.style.display='none'; }); }
+function proximaFotoEq(){ while(fotoAtivas<4&&fotoFila.length){ const id=fotoFila.shift(); fotoAtivas++;
+  api('equipFoto',{id}).then(r=>miniatura(r.b64,320)).then(mini=>{ try{ LS.set('vcp_eqf_'+id,mini); }catch(e){} aplicaFotoEq(id,mini); }).catch(()=>{}).finally(()=>{ delete fotoPend[id]; fotoAtivas--; proximaFotoEq(); }); } }
 function carregaFotosEq(raiz){
-  (raiz||document).querySelectorAll('img[data-eqf]').forEach(img=>{ const id=img.dataset.eqf; const mostra=src=>{ img.src=src; img.style.display=''; const sp=img.nextElementSibling; if(sp) sp.style.display='none'; };
-    const c=LS.get('vcp_eqf_'+id,null); if(c){ mostra(c); return; }
-    fotoFila=fotoFila.then(async()=>{ const c2=LS.get('vcp_eqf_'+id,null); if(c2) return mostra(c2);
-      try{ const r=await api('equipFoto',{id}); const mini=await miniatura(r.b64,320); try{ LS.set('vcp_eqf_'+id,mini); }catch(e){} mostra(mini); }catch(e){} }); });
+  (raiz||document).querySelectorAll('img[data-eqf]').forEach(img=>{ const id=img.dataset.eqf; const c=LS.get('vcp_eqf_'+id,null);
+    if(c){ aplicaFotoEq(id,c); return; } if(!fotoPend[id]){ fotoPend[id]=1; fotoFila.push(id); } });
+  proximaFotoEq();
 }
 function miniatura(src,max){ return new Promise(res=>{ const im=new Image(); im.onload=()=>{ const k=Math.min(1,max/Math.max(im.width,im.height)); const c=document.createElement('canvas'); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext('2d').drawImage(im,0,0,c.width,c.height); res(c.toDataURL('image/jpeg',0.78)); }; im.onerror=()=>res(src); im.src=src; }); }
 /** reserva que ocupa o equipamento no período (texto) ou '' */
