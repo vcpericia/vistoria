@@ -1227,6 +1227,8 @@ let SESS = LS.get('vcp_sessao', null);      // {sessao, usuario}
 let INI = LS.get('vcp_ini', null);          // dados da tela inicial (cache)
 let V = LS.get('vcp_v', null);              // vistoria aberta neste celular
 let FILA = LS.get('vcp_fila', []);          // finalizações aguardando internet
+let ACQ = LS.get('vcp_acoes', []);          // devoluções e cancelamentos feitos sem internet
+const pendAcao=(acao,id)=>ACQ.some(a=>a.acao===acao&&a.dados.id===id);
 let seq = LS.get('vcp_seq', 0);
 let ferramenta='batido', ferramentaF='batido', frotaVeic='';
 let syncando=false, syncTimer=null, ultimoSync='';
@@ -1240,6 +1242,24 @@ async function api(acao, dados){
   return j;
 }
 const semRede = e => !e.servidor;   // falha de rede (não é erro de regra)
+/** Devolução e cancelamento: sem internet, guarda no celular e envia sozinho quando voltar o sinal. */
+async function acaoOuFila(acao,dados,rot){
+  try{ return await api(acao,dados); }
+  catch(e){ if(!semRede(e)) throw e;
+    ACQ.push({id:uid(),acao,dados:Object.assign({},dados,{semRede:true}),rot,em:agoraISO()}); LS.set('vcp_acoes',ACQ);
+    toast('Sem internet agora. '+rot+': o app envia sozinho quando voltar o sinal.',5500); return {fila:true}; }
+}
+let enviandoAcoes=false;
+async function processaAcoes(){
+  if(enviandoAcoes||!ACQ.length||!SESS) return; enviandoAcoes=true; let feitas=0;
+  try{ for(const a of [...ACQ]){
+      try{ const r=await api(a.acao,a.dados); toast(r&&r.ja?'Já estava registrado: '+a.rot:'✔ Enviado: '+a.rot,4000); }
+      catch(e){ if(semRede(e)) break;
+        toast(/não encontrada/i.test(e.message)?'Já estava registrado: '+a.rot:'Não foi possível enviar ('+a.rot+'): '+e.message,6000); }
+      ACQ=ACQ.filter(x=>x.id!==a.id); LS.set('vcp_acoes',ACQ); feitas++; } }
+  finally{ enviandoAcoes=false; }
+  if(feitas){ await carregaInicio(); if($('vHome').classList.contains('on')) renderHome(); if($('vEquip').classList.contains('on')) pintaEquip(); }
+}
 
 /* =================== status de sincronização =================== */
 function setSync(estado,txt){
@@ -1920,14 +1940,17 @@ $('btnDescartar').onclick=async()=>{
 };
 
 /* =================== tela inicial / frota =================== */
-function abertaDe(veic){ return (INI&&INI.abertas||[]).find(a=>a.veiculo===veic); }
+function abertaDe(veic){ const a=(INI&&INI.abertas||[]).find(a=>a.veiculo===veic&&!FILA.some(x=>x.v.id===a.id)); if(a) return a;
+  // viagem iniciada neste celular sem internet (ainda não chegou ao servidor)
+  if(V&&V.status==='andamento'&&V.veiculo===veic&&!V.versao) return {id:V.id,veiculo:veic,motorista:V.motorista,saidaData:brData(V.saida.data),saidaHora:V.saida.hora,destino:V.saida.destino,local:true}; }
 function avariasDe(veic){ return (INI&&INI.avarias||[]).filter(a=>a.veiculo===veic); }
 function renderHome(){
   const u=SESS.usuario; $('uNome').textContent='Olá, '+u.nome.split(' ')[0]; $('uEmail').textContent=u.email; $('uAv').textContent=iniciais(u.nome);
   // vistoria local deste celular ainda não enviada / aberta
   let h='';
   if(V) h+=`<div class="item" style="border-left-color:#1E9E5A"><div class="t">Continuar vistoria · ${esc(V.veiculo)}</div><div class="s">${V.status==='rascunho'?'Rascunho, saída ainda não confirmada':(pendente()?'Há alterações aguardando envio':'Aberta neste celular')} · saída ${brData(V.saida.data)} ${esc(V.saida.hora)}</div><div class="acts"><button id="btnCont">Abrir</button></div></div>`;
-  if(FILA.length) h+=`<div class="item" style="border-left-color:#D64532"><div class="t">${FILA.length} viagem(ns) finalizada(s) aguardando internet</div><div class="s">Serão enviadas automaticamente.</div></div>`;
+  if(FILA.length) h+=`<div class="item" style="border-left-color:#D64532"><div class="t">⏳ ${FILA.length===1?'1 viagem finalizada aguardando internet':FILA.length+' viagens finalizadas aguardando internet'}</div><div class="s">${FILA.map(x=>esc(x.v.veiculo)+' · volta '+brData(x.v.volta&&x.v.volta.data)+' '+esc((x.v.volta&&x.v.volta.hora)||'')).join('<br>')}<br>O PDF e o e-mail saem sozinhos quando voltar o sinal.</div></div>`;
+  if(ACQ.length) h+=`<div class="item" style="border-left-color:#D64532"><div class="t">⏳ ${ACQ.length===1?'1 ação aguardando internet':ACQ.length+' ações aguardando internet'}</div><div class="s">${ACQ.map(a=>esc(a.rot)).join('<br>')}<br>O app envia sozinho quando voltar o sinal.</div></div>`;
   for(const a of (INI&&INI.abertas||[]).filter(x=>x.atrasada)){
     const env=ehEu(a.motorista,a.motoristaAtual,a.acompanhanteAtual);
     if(!env&&!u.admin) continue;
@@ -1941,7 +1964,7 @@ function renderHome(){
     const ab=abertaDe(vc); const nav=avariasDe(vc).length; const rs=reservasDe(vc); const rHoje=reservaAgora(vc); const ind=indAgora(vc), indF=indDe(vc).filter(b=>b!==ind)[0];
     return `<div class="veic ${ab?'uso':''}"><svg class="ic"><use href="${icVeic(vc)}"/></svg>
       <h4>${vc} ${ab?(ab.atrasada?'<span class="chip atr">Volta atrasada</span>':'<span class="chip uso">Em viagem</span>'):(ind?'<span class="chip ind">🔧 Indisponível</span>':rHoje?'<span class="chip res">Reservado hoje</span>':'<span class="chip ok">Disponível</span>')}</h4>
-      <div class="info">${ab?`Com <b>${esc(ab.motoristaAtual||ab.motorista)}</b> desde ${esc(ab.saidaData)} ${esc(ab.saidaHora)}${ab.destino?' · '+esc(String(ab.destino).slice(0,40)):''}${ab.previsaoVolta?` · volta ${ab.atrasada?'era':'prevista'} ${esc(fmtDH(ab.previsaoVolta))}`:''}`:ind?'Não disponível para uso':'Pronto para sair'} · ${nav} avaria${nav===1?'':'s'} cadastrada${nav===1?'':'s'}</div>
+      <div class="info">${ab?`Com <b>${esc(ab.motoristaAtual||ab.motorista)}</b> desde ${esc(ab.saidaData)} ${esc(ab.saidaHora)}${ab.destino?' · '+esc(String(ab.destino).slice(0,40)):''}${ab.local?' · ⏳ aguardando internet':''}${ab.previsaoVolta?` · volta ${ab.atrasada?'era':'prevista'} ${esc(fmtDH(ab.previsaoVolta))}`:''}`:ind?'Não disponível para uso':'Pronto para sair'} · ${nav} avaria${nav===1?'':'s'} cadastrada${nav===1?'':'s'}</div>
       <div class="bts">${ab?`<button class="btn" data-abrir="${ab.id}">Abrir viagem</button>${SESS.usuario.admin?`<button class="btn verm" style="flex:0 0 auto;width:auto;padding:11px 12px" data-cancelar="${ab.id}" data-v="${vc}">Descartar</button>`:''}`:ind&&!u.admin?`<button class="btn" disabled>Indisponível</button>`:`<button class="btn" data-nova="${vc}">Iniciar vistoria</button>`}<button class="btn sec" data-reservar="${vc}" style="flex:0 0 auto;width:auto;padding:11px 12px">Reservar</button><button class="btn sec" data-frota="${vc}">Avarias</button></div>${rs.length?`<div class="resv">📅 ${rs.slice(0,2).map(r=>`${esc(fmtPer(r))} · ${esc(primeiro(r.motorista||r.reservadoPor))}${r.servico?' · '+esc(r.servico):''}`).join('<br>📅 ')}</div>`:''}${ind?`<div class="indInfo">🔧 <b>${esc(ind.motivo)}</b> · ${esc(perInd(ind))}${ind.obs?'<br>'+esc(ind.obs):''}</div>`:''}${indF?`<div class="indInfo">🔧 Ficará indisponível: <b>${esc(indF.motivo)}</b> · ${esc(perInd(indF))}</div>`:''}${u.admin?`<div class="admLnk">${ind||indF?`<button data-liberar="${esc((ind||indF).id)}" data-v="${vc}">${ind?'Liberar o veículo agora':'Cancelar a indisponibilidade'}</button>`:`<button data-ind="${vc}">🔧 Marcar como indisponível</button>`}</div>`:''}</div>`;
   }).join('');
   pintaReservas(); pintaEqHome();
@@ -1993,7 +2016,7 @@ $('rtFechar').onclick=()=>$('mRota').classList.remove('on');
 $('rtBts').addEventListener('click',()=>setTimeout(()=>$('mRota').classList.remove('on'),300));
 
 /* =================== reservas (Google Agenda) =================== */
-const reservasTodas=()=> (INI&&INI.reservas)||[];
+const reservasTodas=()=> ((INI&&INI.reservas)||[]).filter(r=>!pendAcao('cancelarReserva',r.id));
 const agoraISO=()=>{ const d=new Date(); return hojeISO(d)+'T'+horaAgora(d); };
 const reservasDe=v=>reservasTodas().filter(r=>r.veiculo===v&&r.fim>=agoraISO());
 function reservaAgora(v){ const hoje=hojeISO(new Date()), ag=agoraISO(); return reservasTodas().find(r=>r.veiculo===v&&r.fim>=ag&&r.inicio.slice(0,10)<=hoje); }
@@ -2051,7 +2074,9 @@ $('rsSalvar').onclick=async()=>{
 document.addEventListener('click',async e=>{ const dd=e.target.dataset||{};
   if(dd.reservar){ abreReserva(dd.reservar); return; }
   if(dd.cancres){ if(!confirmar('Cancelar esta reserva? O evento será apagado do Google Agenda.')) return;
-    try{ await api('cancelarReserva',{id:dd.cancres,veiculo:dd.v}); toast('Reserva cancelada'); await carregaInicio(); renderHome(); }catch(err){ toast('Erro: '+err.message,4500); } } });
+    const r=reservasTodas().find(x=>x.id===dd.cancres);
+    try{ const x=await acaoOuFila('cancelarReserva',{id:dd.cancres,veiculo:dd.v},'Cancelamento da reserva do '+dd.v+(r?' ('+fmtPer(r)+')':''));
+      if(x.fila){ renderHome(); return; } toast('Reserva cancelada'); await carregaInicio(); renderHome(); }catch(err){ toast('Erro: '+err.message,4500); } } });
 
 
 /* =================== viagem esquecida aberta / previsão de volta =================== */
@@ -2253,7 +2278,7 @@ $('btnConfirmar').onclick=async()=>{
     const ind=indAgora(V.veiculo); if(ind&&!SESS.usuario.admin){ toast(`O ${V.veiculo} está indisponível (${ind.motivo}). Fale com um administrador.`,6000); return; }
     V.status='andamento'; V.versao=0; V._sujos={}; persist();
     document.body.classList.remove('rascunho'); setSync('env','Enviando…'); await sincroniza();
-    toast('Viagem iniciada! O veículo agora aparece como "Em viagem".',3500);
+    toast(pendente()?'Viagem iniciada sem internet. Fica salva no celular e é enviada sozinha quando voltar o sinal.':'Viagem iniciada! O veículo agora aparece como "Em viagem".',pendente()?5500:3500);
   } finally{ $('btnConfirmar').disabled=false; }
 };
 $('btnDescRasc').onclick=()=>{ if(!confirmar('Descartar este rascunho? Nada foi enviado.')) return; V=null; persist(); irHome(true); };
@@ -2438,7 +2463,7 @@ async function iniciaApp(){
   if(!INI){ splash('', 'Sem conexão e sem dados salvos neste celular. Conecte-se à internet e abra de novo.'); return; }
   $('splash').style.display='none';
   if(V && (V.status==='andamento'||V.status==='rascunho')){ abrirForm(); sincroniza(); } else { V=null; persist(); irHome(false); }
-  processaFila(); processaFotos(); pintaAvisos(); renovaPush();
+  processaFila(); processaAcoes(); processaFotos(); pintaAvisos(); renovaPush();
   if(QR_VEIC) abreQR(); else if(!LS.get('vcp_tut_'+SESS.usuario.email,null)) mostraTutorial();
 }
 
@@ -2509,7 +2534,7 @@ async function abreQR(){
 
 /* =================== EQUIPAMENTOS =================== */
 let RS_EQ=new Set(), EQR_SEL=new Set(), eqSetor='', eqEdId='', eqEdFoto='';
-const EQS=()=>(INI&&INI.equipamentos)||[], RESEQ=()=>(INI&&INI.reservasEquip)||[];
+const EQS=()=>(INI&&INI.equipamentos)||[], RESEQ=()=>((INI&&INI.reservasEquip)||[]).filter(r=>!pendAcao('encerrarEquip',r.id));
 const eqPorId=id=>EQS().find(e=>e.id===id);
 const nomesRes=r=>(r.ids||[]).map(i=>(eqPorId(i)||{}).nome).filter(Boolean).join(', ')||r.nomes;
 function iconeEq(n){ n=String(n||'').toLowerCase();
@@ -2549,7 +2574,9 @@ document.addEventListener('click',async e=>{ const d=e.target.dataset||{};
   if(d.eqver) abreEquip();
   if(d.eqenc){ const r=RESEQ().find(x=>x.id===d.eqenc); if(!r) return;
     if(!confirmar(d.canc?`Cancelar a reserva de: ${nomesRes(r)}?`:`Confirmar a devolução de: ${nomesRes(r)}?`)) return;
-    try{ await api('encerrarEquip',{id:d.eqenc,cancelar:!!d.canc}); toast(d.canc?'Reserva cancelada':'Devolução registrada ✔'); await carregaInicio(); renderHome(); if($('vEquip').classList.contains('on')) pintaEquip(); }catch(err){ toast('Erro: '+err.message,4000); } }
+    try{ const x=await acaoOuFila('encerrarEquip',{id:d.eqenc,cancelar:!!d.canc,quando:agoraISO()},(d.canc?'Cancelamento: ':'Devolução: ')+nomesRes(r));
+      if(!x.fila){ toast(d.canc?'Reserva cancelada':'Devolução registrada ✔'); await carregaInicio(); }
+      renderHome(); if($('vEquip').classList.contains('on')) pintaEquip(); if($('mEqDet')&&$('mEqDet').classList.contains('on')) $('mEqDet').classList.remove('on'); }catch(err){ toast('Erro: '+err.message,4000); } }
 });
 function abreEquip(){ document.body.classList.add('emForm'); $('resumoBar').style.display='none'; $('titulo').textContent='Equipamentos'; mostra('vEquip'); pintaEquip(); carregaInicio().then(pintaEquip).catch(()=>{}); }
 function pintaEquip(){
@@ -2717,8 +2744,8 @@ $('btnAjuda').onclick=mostraTutorial;
 /* =================== ciclo =================== */
 setInterval(()=>{ if(document.hidden||!SESS) return;
   if($('vForm').classList.contains('on')) puxa(); else if($('vHome').classList.contains('on')) carregaInicio().then(()=>renderHome()).catch(()=>{});
-  processaFila(); processaFotos(); }, 15000);
-window.addEventListener('online',()=>{ setSync('env','Reconectando…'); sincroniza(); processaFila(); setTimeout(processaFotos,3000); });
+  processaFila(); processaAcoes(); processaFotos(); }, 15000);
+window.addEventListener('online',()=>{ setSync('env','Reconectando…'); sincroniza(); processaFila(); processaAcoes(); setTimeout(processaFotos,3000); });
 window.addEventListener('offline',()=>setSync('off','Sem conexão · salvo no celular'));
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden && SESS){ if(V) puxa(); } });
 window.addEventListener('resize',()=>prepSig(true));
