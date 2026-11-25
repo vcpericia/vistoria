@@ -131,6 +131,14 @@ textarea{min-height:76px;resize:vertical}
 .rodape{text-align:center;color:var(--sub);font-size:11px;margin-top:24px}
 .rodape svg{height:22px;display:block;margin:0 auto 6px;opacity:.8}
 @media (max-width:400px){.row3{grid-template-columns:1fr 1fr}.obsGrid{grid-template-columns:1fr}}
+.rotaBts{display:flex;gap:8px;margin-top:8px}.rotaBts:empty{display:none}
+.rotaBts .rota{flex:1;justify-content:center;padding:10px 8px;font-size:13.5px}
+a.rota{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:6px 11px;border-radius:8px;border:1.5px solid var(--borda);background:#fff;color:#1A73E8;text-decoration:none}
+a.rota+a.rota{color:#0b8fb3}
+.rIc{width:17px;height:17px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:800;flex:0 0 auto}
+.hint.okH{color:var(--ok);font-weight:600}
+.item .acts a.rota,.rotaBts a.rota{display:inline-flex;align-items:center;gap:6px;color:#1A73E8}
+.item .acts a.rota+a.rota,.rotaBts a.rota+a.rota{color:#0b8fb3}
 </style>
 
 <style>
@@ -318,6 +326,7 @@ input:focus,select:focus,textarea:focus{background-color:#1B222B}
 .modal{background-color:#1B222B}
 .modal:before{background-color:#1C2B3F}
 .modal h3{color:#E6EAF0}
+a.rota{background-color:#1B222B}
 .rascBox b{color:#F5A04A}
 .campoErro{background-color:#3F211C !important}
 .foto{border:1.5px dashed #3A4451;background-color:#232B35}
@@ -448,6 +457,7 @@ input:focus,select:focus,textarea:focus{background-color:#1B222B}
   </div>
   <label class="obr">Destino / Observação</label>
   <textarea id="sDestino" placeholder="Ex.: Sorriso-MT – vistoria fazenda X"></textarea>
+  <div class="rotaBts" id="sRota"></div>
 </div>
 
 <div class="card">
@@ -708,6 +718,7 @@ input:focus,select:focus,textarea:focus{background-color:#1B222B}
   <label>Nº do serviço</label><input id="rsServ" inputmode="numeric" placeholder="Ex.: 29951">
   <label>Serviço / motivo</label><input id="rsMot" placeholder="Ex.: Avaliação Dourados">
   <label>Destino</label><input id="rsDest" placeholder="Cidade - UF">
+  <label>📍 Localização <span style="font-weight:400">(opcional · link do Maps/WhatsApp ou coordenadas)</span></label><input id="rsLocal" inputmode="url" autocomplete="off" placeholder="Cole o link ou ex.: -22.2211, -54.8056"><div class="hint" id="rsLocalInfo">Para fazendas que o Maps não acha pelo nome. A rota vai direto para o ponto.</div>
   <label>Objetivo da viagem</label><textarea id="rsObj" placeholder="Ex.: Avaliação da fazenda São Francisco..."></textarea>
   <label>Equipamentos a levar <button class="lnk" id="rsEqBtn" style="float:right">📋 Escolher da lista</button></label><textarea id="rsEquip" placeholder="Ex.: Drone, GPS, trena"></textarea>
   <div id="rsEqBox" style="display:none"><input id="rsEqBusca" placeholder="Buscar equipamento…" style="margin-top:8px"><div class="eqPick" id="rsEqLista"></div><div class="eqSelInfo" id="rsEqInfo"></div></div>
@@ -717,6 +728,15 @@ input:focus,select:focus,textarea:focus{background-color:#1B222B}
   <div class="status" id="stRes"></div>
   <button class="btn" id="rsSalvar">Verificar e reservar</button>
   <button class="btn verm" id="rsCancelar">Cancelar</button>
+</div></div>
+
+<div class="modalBg" id="mRota"><div class="modal">
+  <h3 id="rtTit"></h3>
+  <div class="s" id="rtTxt" style="font-size:13px;color:var(--sub)"></div>
+  <div id="rtDest" style="font-weight:700;margin-top:10px"></div>
+  <div class="hint" id="rtLocal"></div>
+  <div class="rotaBts" id="rtBts" style="margin-top:14px"></div>
+  <button class="btn sec" id="rtFechar" style="margin-top:12px">Fechar</button>
 </div></div>
 
 <!-- Modal nova previsão de volta -->
@@ -1501,7 +1521,7 @@ BIND.forEach(([id,path])=>{
     marca(path); if(id==='motorista'||id==='acompanhante') atualizaDirigindo(); if(id==='sKm'||id==='vKm') kmRodados();
   });
 });
-function preencheCampos(){ BIND.forEach(([id,path])=>{ if(document.activeElement!==$(id)) $(id).value=getPath(V,path)??''; }); montaOcorr(); pintaPrevForm(); pintaResInfo(); }
+function preencheCampos(){ BIND.forEach(([id,path])=>{ if(document.activeElement!==$(id)) $(id).value=getPath(V,path)??''; }); montaOcorr(); pintaPrevForm(); pintaResInfo(); pintaRotaSaida(); }
 function montaOcorr(){
   if(!V) return; const t=V.ocorrTeve||'';
   [...$('ocSeg').children].forEach(b=>b.classList.toggle('on',b.dataset.v===t));
@@ -1943,6 +1963,35 @@ document.addEventListener('click',async e=>{ const id=e.target.dataset&&e.target
   try{ toast('Gerando PDF…'); const r=await api('obter',{id}); const {doc,nome}=await montaPDF(r.vistoria,false); doc.save(nome); }catch(err){ toast('Não foi possível gerar: '+err.message,4000); } });
 
 
+/* =================== rota no Google Maps / Waze =================== */
+/** acha coordenadas num texto ou link: "-22.2211, -54.8056", links do Maps (@lat,lng / !3d!4d / q=lat,lng) ou 22°13'16"S 54°48'20"W */
+function coordsDe(s){ s=String(s||''); const ok=(a,b)=>Math.abs(a)<=90&&Math.abs(b)<=180&&!(a===0&&b===0)?(+a.toFixed(6))+','+(+b.toFixed(6)):null;
+  let m=s.match(/^\s*(-?\d{1,2}(?:\.\d+)?)\s*[,;]\s*(-?\d{1,3}(?:\.\d+)?)\s*$/)||s.match(/!3d(-?\d{1,2}\.\d+)!4d(-?\d{1,3}\.\d+)/)||s.match(/@(-?\d{1,2}\.\d+),(-?\d{1,3}\.\d+)/)||s.match(/(?:^|[^\d.])(-?\d{1,2}\.\d{3,})\s*[,;\s]\s*(-?\d{1,3}\.\d{3,})/);
+  if(m) return ok(+m[1],+m[2]);
+  m=s.match(/(\d{1,2})\s*°\s*(\d{1,2})\s*['’′]\s*([\d.,]+)?\s*["”″]?\s*([NS])[\s,;]+(\d{1,3})\s*°\s*(\d{1,2})\s*['’′]\s*([\d.,]+)?\s*["”″]?\s*([LEWO])/i);
+  if(m){ const g=(d,mi,se,h)=>(+d+(+mi)/60+(+(String(se||0).replace(',','.')))/3600)*(/[SWO]/i.test(h)?-1:1); return ok(g(m[1],m[2],m[3],m[4]),g(m[5],m[6],m[7],m[8])); }
+  return null; }
+const ehLink=s=>/^https?:\/\//i.test(String(s||'').trim());
+function rotaUrls(destino,local){ local=String(local||'').trim(); destino=String(destino||'').trim(); const c=coordsDe(local);
+  if(c) return {maps:'https://www.google.com/maps/dir/?api=1&destination='+c,waze:'https://waze.com/ul?ll='+c+'&navigate=yes'};
+  const link=ehLink(local)?local.split(/\s/)[0]:''; const t=(local&&!link?local:destino); if(!t&&!link) return null;
+  return {maps:link||'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(t),waze:t?'https://waze.com/ul?q='+encodeURIComponent(t)+'&navigate=yes':'https://waze.com/ul'}; }
+const IC_GM='<span class="rIc" style="background:#1A73E8">G</span>', IC_WZ='<span class="rIc" style="background:#33CCFF">W</span>';
+function botoesRota(destino,local){ const u=rotaUrls(destino,local); if(!u) return '';
+  return `<a class="rota" href="${esc(u.maps)}" target="_blank" rel="noopener">${IC_GM}Maps</a><a class="rota" href="${esc(u.waze)}" target="_blank" rel="noopener">${IC_WZ}Waze</a>`; }
+function pintaLocalInfo(){ const el=$('rsLocalInfo'); if(!el) return; const v=$('rsLocal').value.trim(); const c=coordsDe(v);
+  el.className='hint'+(v?' okH':''); el.textContent=!v?'Para fazendas que o Maps não acha pelo nome. A rota vai direto para o ponto.':c?'✓ Ponto encontrado: '+c.replace(',',', '):ehLink(v)?'✓ Link salvo. O ponto exato é conferido ao reservar.':'Será usado como endereço na rota.'; }
+$('rsLocal').addEventListener('input',pintaLocalInfo);
+function pintaRotaSaida(){ const el=$('sRota'); if(!el||!V) return; const rv=V.reservaId&&reservasTodas().find(r=>r.id===V.reservaId);
+  const ro=rv&&(rv.destino||rv.local)?{destino:rv.destino,local:rv.local}:V.rota||{destino:V.saida&&V.saida.destino};
+  el.innerHTML=botoesRota(ro.destino,ro.local); }
+$('sDestino').addEventListener('input',pintaRotaSaida);
+function abreRota(tit,txt,destino,local){ $('rtTit').textContent=tit; $('rtTxt').textContent=txt||'';
+  $('rtDest').textContent=destino?'📍 '+destino:''; $('rtLocal').textContent=local?'Localização exata: '+(coordsDe(local)||local):'';
+  const b=botoesRota(destino,local); $('rtBts').innerHTML=b||'<div class="hint">Sem destino informado.</div>'; $('mRota').classList.add('on'); }
+$('rtFechar').onclick=()=>$('mRota').classList.remove('on');
+$('rtBts').addEventListener('click',()=>setTimeout(()=>$('mRota').classList.remove('on'),300));
+
 /* =================== reservas (Google Agenda) =================== */
 const reservasTodas=()=> (INI&&INI.reservas)||[];
 const agoraISO=()=>{ const d=new Date(); return hojeISO(d)+'T'+horaAgora(d); };
@@ -1967,14 +2016,15 @@ function pintaReservas(){
       ${r.objetivo?`<div class="s">🎯 ${esc(r.objetivo.length>140?r.objetivo.slice(0,140)+'…':r.objetivo)}</div>`:''}
       ${r.equipamentos?`<div class="s">🧰 ${esc(r.equipamentos)}</div>`:''}
       <div class="s">${esc(r.motorista||r.reservadoPor||'?')}${r.acompanhante?' e '+esc(r.acompanhante):''} · ${r.origem==='agenda'?'marcado no Google Agenda':'reservado pelo app'}</div>
-      ${pode?`<div class="acts"><button data-cancres="${esc(r.id)}" data-v="${esc(r.veiculo)}">Cancelar reserva</button></div>`:''}</div>`; }).join('')
+      ${r.local?`<div class="s">📍 Localização exata informada</div>`:''}
+      <div class="acts">${botoesRota(r.destino,r.local)}${pode?`<button data-cancres="${esc(r.id)}" data-v="${esc(r.veiculo)}">Cancelar reserva</button>`:''}</div></div>`; }).join('')
     :'<div class="vazio">Nenhuma reserva de carro nesta semana. Toque em "📅 Semana" para ver as próximas semanas ou em "+ Reservar".</div>';
 }
 function abreReserva(veic,dia){
   const veics=(INI&&INI.veiculos)||['GOL','SAVEIRO','RANGER'];
   $('rsVeic').innerHTML=veics.map(v=>`<option${v===veic?' selected':''}>${v}</option>`).join('');
   const hoje=hojeISO(new Date()); $('rsD1').value=dia||hoje; $('rsD2').value=dia||hoje; $('rsD1').min=hoje; $('rsD2').min=hoje;
-  ['rsServ','rsMot','rsDest','rsAcomp','rsObj','rsEquip','rsEqBusca'].forEach(i=>$(i).value=''); $('rsMoto').value=SESS.usuario.nome;
+  ['rsServ','rsMot','rsDest','rsLocal','rsAcomp','rsObj','rsEquip','rsEqBusca'].forEach(i=>$(i).value=''); pintaLocalInfo(); $('rsMoto').value=SESS.usuario.nome;
   RS_EQ=new Set(); $('rsEqBox').style.display='none';
   stOff($('stRes')); $('mReserva').classList.add('on');
 }
@@ -1983,7 +2033,7 @@ $('rsCancelar').onclick=()=>$('mReserva').classList.remove('on');
 $('btnReservar').onclick=()=>abreReserva('');
 $('rsSalvar').onclick=async()=>{
   const d={veiculo:$('rsVeic').value,dataIni:$('rsD1').value,horaIni:$('rsH1').value,dataFim:$('rsD2').value,horaFim:$('rsH2').value,
-    servico:$('rsServ').value.trim(),motivo:$('rsMot').value.trim(),destino:$('rsDest').value.trim(),objetivo:$('rsObj').value.trim(),equipamentos:$('rsEquip').value.trim(),motorista:$('rsMoto').value.trim(),acompanhante:$('rsAcomp').value.trim()};
+    servico:$('rsServ').value.trim(),motivo:$('rsMot').value.trim(),destino:$('rsDest').value.trim(),local:$('rsLocal').value.trim(),objetivo:$('rsObj').value.trim(),equipamentos:$('rsEquip').value.trim(),motorista:$('rsMoto').value.trim(),acompanhante:$('rsAcomp').value.trim()};
   if(!d.motivo&&!d.servico){ st($('stRes'),'Informe o nº do serviço ou o motivo.','erro'); return; }
   if(!d.destino){ st($('stRes'),'Informe o destino.','erro'); return; }
   $('rsSalvar').disabled=true; st($('stRes'),'Verificando a agenda do '+d.veiculo+'…','info');
@@ -2081,7 +2131,7 @@ $('agHoje').onclick=()=>{ agIni=segunda(new Date()); pintaAgenda(); };
 $('agTab').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
   if(b.dataset.aglivre){ abreReserva(b.dataset.aglivre,b.dataset.dia); return; }
   const x=(window.__agItens||[])[+b.dataset.agi]; if(!x) return; const f=s=>fmtDH(s);
-  if(x.tipo==='R'){ const r=x.r; toast(`${r.veiculo} reservado de ${f(r.inicio)} a ${f(r.fim)} · ${r.motorista||r.reservadoPor||''}${r.acompanhante?' e '+r.acompanhante:''}${r.servico?' · '+r.servico:''} ${r.motivo||''}${r.destino?' · '+r.destino:''}`,6000); }
+  if(x.tipo==='R'){ const r=x.r; abreRota(`${r.veiculo} · ${fmtPer(r)}`,`${r.motorista||r.reservadoPor||''}${r.acompanhante?' e '+r.acompanhante:''}${r.servico?' · '+r.servico:''} ${r.motivo||''}`,r.destino,r.local); }
   else if(x.tipo==='B'){ const b=x.b; toast(`${b.veiculo} indisponível · ${b.motivo} · ${perInd(b)}${b.obs?' · '+b.obs:''}`,6000); }
   else if(x.tipo==='F'){ const v=x.v; toast(`${v.veiculo} · ${v.saidaData} → ${v.voltaData} · ${v.motorista}${v.acompanhante?' e '+v.acompanhante:''}${v.destino?' · '+v.destino:''}${v.kmRodados?' · '+fmtKm(v.kmRodados)+' km':''}`,6000); }
   else { const a=x.a; toast(`${a.veiculo} em viagem com ${a.motoristaAtual||a.motorista} desde ${a.saidaData} ${a.saidaHora}${a.previsaoVolta?' · volta prevista '+f(a.previsaoVolta):''}${a.atrasada?' (atrasada)':''}`,6000); }
@@ -2172,7 +2222,7 @@ async function novaVistoria(veic){
   if(ind && !u.admin){ toast(`O ${veic} está indisponível (${ind.motivo}) ${perInd(ind)}. Fale com um administrador.`,6000); return; }
   if(ind && !confirmar(`O ${veic} está marcado como indisponível (${ind.motivo}). Iniciar a vistoria mesmo assim (ex.: levar à oficina)?`)) return;
   if(rv && !ehEu(rv.motorista,rv.acompanhante,rv.reservadoPor) && !confirmar(`O ${veic} está reservado ${fmtPer(rv)} para ${rv.motorista||rv.reservadoPor}${rv.destino?' ('+rv.destino+')':''}. Iniciar a vistoria mesmo assim?`)) return;
-  V={ id:uid(), status:'rascunho', veiculo:veic, motorista:(rv&&rv.motorista)||u.nome, acompanhante:(rv&&rv.acompanhante)||'', reservaId:rv?rv.id:'', objetivo:(rv&&rv.objetivo)||'', equipamentos:(rv&&rv.equipamentos)||'',
+  V={ id:uid(), status:'rascunho', veiculo:veic, motorista:(rv&&rv.motorista)||u.nome, acompanhante:(rv&&rv.acompanhante)||'', reservaId:rv?rv.id:'', rota:rv&&(rv.destino||rv.local)?{destino:rv.destino||'',local:rv.local||''}:null, objetivo:(rv&&rv.objetivo)||'', equipamentos:(rv&&rv.equipamentos)||'',
     saida:{data:hojeISO(d),hora:horaAgora(d),km:'',destino:rv?[rv.servico?rv.servico+' - '+(rv.motivo||''):rv.motivo,rv.destino].filter(Boolean).join(' · '):''}, itens:{}, obs:{direito:'',esquerdo:'',dianteira:'',traseira:'',superior:''},
     combSaida:null, pneus:{}, pneusObs:'', trocas:[], abastecimentos:[], volta:{data:'',hora:'',km:'',obs:''}, combVolta:null, ocorrencia:'', ocorrTeve:'', ocorrDesc:'', ocorrData:'', ocorrHora:'', assinatura:'',
     avarias: avariasDe(veic).map(a=>({id:a.id,refId:a.id,x:a.x,y:a.y,tipo:a.tipo,descricao:a.descricao,existente:true,reparada:false,registradaEm:a.registradaEm,origem:a.origem})),
