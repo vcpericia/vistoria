@@ -1819,12 +1819,15 @@ async function montaPDF(v, parcial){
   ensure(6); doc.rect(L,y,W,5.5); txt('Motorista na saída: '+(v.motorista||'')+'   (desde '+brData(v.saida.data)+' '+(v.saida.hora||'')+')',L+1.5,y+4,{s:8.5}); y+=5.5;
   if(!v.trocas.length){doc.rect(L,y,W,5.5);txt('Nenhuma troca de motorista.',L+1.5,y+4,{s:8.5});y+=5.5;}
   v.trocas.forEach((t,i)=>{ensure(5.5);doc.rect(L,y,W,5.5);txt(`${i+1}. ${brData(t.data)} ${t.hora}  —  ${t.de||'?'}  passou para  ${t.para}${t.km?'   ·   KM '+fmtKm(t.km):''}${t.local?'   ·   '+t.local:''}`,L+1.5,y+4,{s:8.5});y+=5.5;});
-  ensure(30); faixa('VOLTA'); const yV=y;
-  [['DATA:',brData(v.volta.data)],['HORA:',v.volta.hora],['KM:',fmtKm(v.volta.km)]].forEach(([k,val],i)=>{doc.rect(L,y+i*6,25,6);doc.rect(L+25,y+i*6,55,6);txt(k,L+1.5,y+i*6+4.2,{b:true});txt(val,L+27,y+i*6+4.2);});
-  doc.rect(L+80,yV,W-80,18); txt('OBSERVAÇÃO:',L+81.5,yV+4.2,{b:true});
-  const kmA=parseFloat(v.saida.km),kmB=parseFloat(v.volta.km); const extra=[];
-  if(!isNaN(kmA)&&!isNaN(kmB)) extra.push('Km rodados: '+fmtKm(kmB-kmA)); if(v.checkinQR||v.checkinQRVolta) extra.push('Check-in QR do veículo: '+[v.checkinQR&&'saída '+v.checkinQR.hora,v.checkinQRVolta&&'volta '+v.checkinQRVolta.hora].filter(Boolean).join(', ')); if(v.combVolta!=null) extra.push('Combustível na volta: '+NIVEIS[v.combVolta]);
-  doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.text(doc.splitTextToSize([v.volta.obs,extra.join('  |  ')].filter(Boolean).join('\n'),W-84).slice(0,3),L+81.5,yV+8.5); y+=18;
+  ensure(38); faixa('VOLTA'); const yV=y;
+  const kmA=parseFloat(v.saida.km),kmB=parseFloat(v.volta.km); const kmR=!isNaN(kmA)&&!isNaN(kmB)?fmtKm(kmB-kmA):'';
+  [['DATA:',brData(v.volta.data)],['HORA:',v.volta.hora],['KM:',fmtKm(v.volta.km)],['KM RODADOS:',kmR],['COMBUSTÍVEL:',v.combVolta!=null?NIVEIS[v.combVolta]:'']].forEach(([k,val],i)=>{doc.rect(L,y+i*6,25,6);doc.rect(L+25,y+i*6,55,6);txt(k,L+1.5,y+i*6+4.2,{b:true,s:k.length>8?7.4:undefined});txt(val,L+27,y+i*6+4.2);});
+  // combustível na volta: mesmo marcador da saída
+  const gW=46; doc.rect(L+80,yV,W-80-gW,30); doc.rect(R-gW,yV,gW,30); txt('OBSERVAÇÃO:',L+81.5,yV+4.2,{b:true});
+  if(v.combVolta!=null){ const pngGV=await svgParaPng(svgGauge(v.combVolta,440),440,260); doc.addImage(pngGV,'PNG',R-gW+5,yV+1.2,36,36*260/440,undefined,'FAST'); }
+  txt('Volta: '+(v.combVolta!=null?NIVEIS[v.combVolta]:'não informado'),R-gW/2,yV+26.5,{al:'center',b:true});
+  const extra=[]; if(v.checkinQR||v.checkinQRVolta) extra.push('Check-in QR do veículo: '+[v.checkinQR&&'saída '+v.checkinQR.hora,v.checkinQRVolta&&'volta '+v.checkinQRVolta.hora].filter(Boolean).join(', '));
+  doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.text(doc.splitTextToSize([v.volta.obs,extra.join('  |  ')].filter(Boolean).join('\n'),W-84-gW).slice(0,6),L+81.5,yV+8.5); y+=30;
   { const ev=v.equipVolta&&v.equipVolta.itens; const ks=ev?Object.keys(ev):[];
     if(ks.length){ const nm=i=>(v.equipVolta.nomes||{})[i]||((typeof eqPorId==='function'&&eqPorId(i))||{}).nome||i;
       const t=ks.map(i=>nm(i)+(ev[i]==='SIM'?' (voltou)':' (NÃO VOLTOU)')).join(';  ');
