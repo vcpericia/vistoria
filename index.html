@@ -158,6 +158,7 @@ input.pick{cursor:pointer;background-image:linear-gradient(45deg,transparent 50%
 .retI{border-left-color:#9aa3ae}.retI.uso{border-left-color:#EE7D07}.retI.atr{border-left-color:#C0392B;background:#FFF6F5}.retI.res{border-left-color:#1D5FBF}.retI.liv{border-left-color:#1E9E5A}
 .retI .acts{align-items:center}
 .eqSt.atr{background:#FDECEA;color:#C0392B}.eqSt.canc{background:#ECEEF1;color:#5B6573}
+.retRel{background:var(--fundo);border-radius:12px;padding:4px 12px 10px;margin-top:10px}.retRel label{margin-top:6px}
 </style>
 
 <style>
@@ -721,6 +722,11 @@ a.rota{background-color:#1B222B}
   <div class="retRes" id="retRes"></div>
   <div class="eqFilt" id="retFilt"></div>
   <input id="retBusca" placeholder="Buscar por equipamento, pessoa ou nº do serviço" autocomplete="off">
+  <div class="retRel">
+    <div class="row"><div><label>Período de</label><input type="date" id="retDe"></div><div><label>até</label><input type="date" id="retAte"></div></div>
+    <div class="row" style="margin-top:8px"><button class="btn sec" id="retXls" style="margin:0">📊 Relatório Excel</button><button class="btn sec" id="retPdf" style="margin:0">📄 Relatório PDF</button></div>
+    <div class="hint" id="retRelInfo">O relatório sai com o que está filtrado aqui (situação, busca e período).</div>
+  </div>
   <div id="retLista" style="margin-top:8px"></div>
   <button class="btn sec" id="retFechar" style="margin-top:12px">Fechar</button>
 </div></div>
@@ -2683,18 +2689,26 @@ function situacaoRet(r){ const ag=agoraISO();
   if(r.de<=ag) return ['uso','Com '+primeiro(r.funcionario)];
   return ['res','Reservado']; }
 async function abreRetiradas(filtro){ if(filtro) retFiltro=filtro; $('retBusca').value=''; $('mRet').classList.add('on'); pintaRetiradas();
-  try{ const r=await api('retiradas',{dias:120}); RET=r.retiradas||[]; pintaRetiradas(); }
+  try{ RET=null; await retCarrega(); pintaRetiradas(); }
   catch(e){ if(!RET) $('retLista').innerHTML=`<div class="vazio">${semRede(e)?'Sem internet: abra de novo quando voltar o sinal.':'Erro: '+esc(e.message)}</div>`; } }
+const sitRet=r=>situacaoRet(r)[0];
+const RET_F=[['com','Com alguém agora',r=>sitRet(r)==='uso'||sitRet(r)==='atr'],['atr','Não devolvidos',r=>sitRet(r)==='atr'],['res','Próximas retiradas',r=>sitRet(r)==='res'],['dev','Devolvidos',r=>sitRet(r)==='liv'],['todos','Tudo',()=>true]];
+function retFiltradas(){ if(!RET) return [];
+  const q=String($('retBusca').value||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+  const f=(RET_F.find(x=>x[0]===retFiltro)||RET_F[0])[2]; const de=$('retDe').value, ate=$('retAte').value;
+  let l=RET.filter(f).filter(r=>!q||[nomesRes(r),r.nomes,r.funcionario,r.servico].join(' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(q))
+    .filter(r=>(!de||r.ate.slice(0,10)>=de)&&(!ate||r.de.slice(0,10)<=ate));
+  if(retFiltro==='res') l=l.slice().reverse(); return l; }
+async function retCarrega(){ const de=$('retDe').value; let dias=120; if(de){ dias=Math.max(120,Math.ceil((Date.now()-new Date(de+'T00:00').getTime())/864e5)+2); }
+  if(RET&&RET._dias>=dias) return; const r=await api('retiradas',{dias}); RET=r.retiradas||[]; RET._dias=dias; }
 function pintaRetiradas(){
   if(!RET){ $('retLista').innerHTML='<div class="vazio">Carregando…</div>'; $('retRes').innerHTML=''; $('retFilt').innerHTML=''; return; }
   const sit=r=>situacaoRet(r)[0]; const n=k=>RET.filter(r=>sit(r)===k).length;
-  const F=[['com','Com alguém agora',r=>sit(r)==='uso'||sit(r)==='atr'],['atr','Não devolvidos',r=>sit(r)==='atr'],['res','Próximas retiradas',r=>sit(r)==='res'],['dev','Devolvidos',r=>sit(r)==='liv'],['todos','Tudo',()=>true]];
+  const F=RET_F;
   $('retRes').innerHTML=`<div><b>${n('uso')+n('atr')}</b><span>com alguém</span></div><div class="${n('atr')?'alerta':''}"><b>${n('atr')}</b><span>não devolvidos</span></div><div><b>${n('res')}</b><span>reservados</span></div><div><b>${n('liv')}</b><span>devolvidos</span></div>`;
   $('retFilt').innerHTML=F.map(([k,t])=>`<button data-retf="${k}" class="${k===retFiltro?'on':''}">${t}</button>`).join('');
-  const q=String($('retBusca').value||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
-  const f=(F.find(x=>x[0]===retFiltro)||F[0])[2];
-  let l=RET.filter(f).filter(r=>!q||[nomesRes(r),r.nomes,r.funcionario,r.servico].join(' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(q));
-  if(retFiltro==='res') l=l.slice().reverse();
+  const l=retFiltradas();
+  $('retRelInfo').textContent=`O relatório sai com o que está na lista abaixo: ${l.length} retirada(s) · ${(RET_F.find(x=>x[0]===retFiltro)||RET_F[0])[1]}${$('retDe').value||$('retAte').value?' · período '+[$('retDe').value,$('retAte').value].map(d=>d?brData(d):'…').join(' a '):''}.`;
   $('retLista').innerHTML=l.length?l.slice(0,150).map(r=>{ const [c,t]=situacaoRet(r);
     return `<div class="item retI ${c}"><div class="t">${esc(nomesRes(r)||r.nomes)}</div>
       <div class="s">👤 <b>${esc(r.funcionario||'?')}</b>${r.servico?' · serviço '+esc(r.servico):''}${r.reservaId?' · junto com o carro':''}</div>
@@ -2705,6 +2719,57 @@ function pintaRetiradas(){
     :'<div class="vazio">Nada aqui.</div>';
 }
 $('eqRetBtn').onclick=()=>abreRetiradas();
+['retDe','retAte'].forEach(id=>$(id).addEventListener('change',async()=>{ try{ await retCarrega(); }catch(e){} pintaRetiradas(); }));
+/** linhas do relatório: uma por retirada e uma por equipamento */
+function retRelDados(){ const l=retFiltradas(); const dh=s=>s?fmtDH(s).replace(/^(\d\d\/\d\d)/,m=>m)+'':'';
+  const dt=s=>s?s.slice(8,10)+'/'+s.slice(5,7)+'/'+s.slice(0,4)+' '+s.slice(11,16):'';
+  const enc=r=>r.status==='DEVOLVIDA'||r.status==='CANCELADA'?(r.encerradoEm||''):'';
+  return {l,dt,enc}; }
+$('retXls').onclick=()=>{ const {l,dt,enc}=retRelDados(); if(!l.length){ toast('Nada para o relatório com esses filtros.'); return; }
+  const sit=r=>situacaoRet(r)[1].replace('⚠ ','');
+  const filtroTxt=(RET_F.find(x=>x[0]===retFiltro)||RET_F[0])[1]; const per=[$('retDe').value,$('retAte').value].map(d=>d?brData(d):'…').join(' a ');
+  const cont=k=>l.filter(r=>sitRet(r)===k).length;
+  const porPessoa={}; l.forEach(r=>{ const k=r.funcionario||'?'; porPessoa[k]=porPessoa[k]||[0,0,0]; porPessoa[k][0]++; porPessoa[k][1]+=r.ids.length; if(sitRet(r)==='atr') porPessoa[k][2]++; });
+  const porEq={}; l.forEach(r=>r.ids.forEach(i=>{ const e=eqPorId(i)||{nome:i}; porEq[i]=porEq[i]||{e,n:0,ult:''}; porEq[i].n++; if(r.de>porEq[i].ult) porEq[i].ult=r.de; }));
+  const resumo={nome:'Resumo',filtro:false,colunas:[{t:'Indicador',w:34},{t:'Valor',w:40}],linhas:[
+    ['Relatório','Equipamentos reservados / retirados'],['Situação filtrada',filtroTxt],['Período',$('retDe').value||$('retAte').value?per:'Últimos 120 dias e futuras'],['Busca',$('retBusca').value||'—'],['Gerado em',new Date().toLocaleString('pt-BR')+' por '+SESS.usuario.nome],['',''],
+    ['Retiradas no relatório',l.length],['Equipamentos (somando todas)',l.reduce((a,r)=>a+r.ids.length,0)],['Com alguém agora',cont('uso')],['Não devolvidos (prazo vencido)',cont('atr')],['Reservados (ainda não retirados)',cont('res')],['Devolvidos',cont('liv')],['Cancelados',cont('canc')]]};
+  const ret={nome:'Retiradas',colunas:[{t:'Equipamentos',w:48},{t:'Qtde',w:6,f:'int'},{t:'Funcionário',w:30},{t:'Serviço',w:12},{t:'Retirada',w:16},{t:'Devolução prevista',w:17},{t:'Situação',w:16},{t:'Encerrado em',w:18},{t:'Registrado por',w:26},{t:'Reservado por',w:26},{t:'Junto com o carro',w:10}],
+    linhas:l.map(r=>[nomesRes(r)||r.nomes,r.ids.length,r.funcionario,r.servico,dt(r.de),dt(r.ate),sit(r),enc(r),enc(r)?r.encerradoPor:'',r.criadoPor,r.reservaId?'Sim':'Não'])};
+  const det={nome:'Por equipamento',colunas:[{t:'Equipamento',w:34},{t:'Código VCP',w:12},{t:'Setor',w:14},{t:'Nº de série',w:20},{t:'Funcionário',w:30},{t:'Retirada',w:16},{t:'Devolução prevista',w:17},{t:'Situação',w:16},{t:'Serviço',w:12}],
+    linhas:l.flatMap(r=>r.ids.map(i=>{ const e=eqPorId(i)||{nome:i}; return [e.nome,e.codigo||'',e.setor||'',e.serie||'',r.funcionario,dt(r.de),dt(r.ate),sit(r),r.servico]; })).sort((a,b)=>String(a[0]).localeCompare(String(b[0]),'pt-BR'))};
+  const pes={nome:'Por pessoa',colunas:[{t:'Funcionário',w:34},{t:'Retiradas',w:10,f:'int'},{t:'Equipamentos',w:13,f:'int'},{t:'Não devolvidas',w:14,f:'int'}],
+    linhas:Object.entries(porPessoa).sort((a,b)=>b[1][0]-a[1][0]).map(([n,v])=>[n,...v])};
+  const blob=xlsx([resumo,ret,det,pes]); const nome=`VCP_Equipamentos_reservados_${hojeISO(new Date())}.xlsx`;
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=nome; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },2000);
+  toast('Relatório gerado: '+nome,4000); };
+$('retPdf').onclick=async()=>{ const {l,dt,enc}=retRelDados(); if(!l.length){ toast('Nada para o relatório com esses filtros.'); return; }
+  try{ toast('Gerando PDF…');
+  const { jsPDF } = window.jspdf; const doc=new jsPDF({unit:'mm',format:'a4',orientation:'landscape'});
+  const L=10,R=287,W=R-L; let y=10;
+  const txt=(t,x,yy,o={})=>{doc.setFont('helvetica',o.b?'bold':'normal');doc.setFontSize(o.s||8.5);doc.text(String(t??''),x,yy,o.al?{align:o.al}:undefined);};
+  const logoSvg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 453.56 301" width="454" height="301">${$('logoVCP').innerHTML.replace(/currentColor/g,'#ffffff')}</svg>`;
+  const pngLogo=await svgParaPng(logoSvg,454,301,'#1F2630');
+  doc.setFillColor(31,38,48); doc.rect(L,y,W,14,'F'); doc.setFillColor(238,125,7); doc.rect(L,y+14,W,1.2,'F');
+  doc.addImage(pngLogo,'PNG',L+3,y+1.5,16.5,11,undefined,'FAST');
+  doc.setTextColor(255,255,255); txt('RELATÓRIO DE EQUIPAMENTOS RESERVADOS',148.5,y+6.5,{b:true,s:12.5,al:'center'});
+  doc.setTextColor(238,160,90); txt('VCP · Vinícius Coutinho Consultoria e Perícia',148.5,y+11,{s:7.5,al:'center'}); doc.setTextColor(0,0,0); y+=20;
+  const filtroTxt=(RET_F.find(x=>x[0]===retFiltro)||RET_F[0])[1]; const per=$('retDe').value||$('retAte').value?[$('retDe').value,$('retAte').value].map(d=>d?brData(d):'…').join(' a '):'últimos 120 dias e futuras';
+  const cont=k=>l.filter(r=>sitRet(r)===k).length;
+  txt(`Situação: ${filtroTxt}   ·   Período: ${per}${$('retBusca').value?'   ·   Busca: '+$('retBusca').value:''}   ·   Gerado em ${new Date().toLocaleString('pt-BR')} por ${SESS.usuario.nome}`,L,y,{s:8}); y+=5;
+  txt(`${l.length} retirada(s) · ${l.reduce((a,r)=>a+r.ids.length,0)} equipamento(s)   |   Com alguém: ${cont('uso')}   ·   Não devolvidos: ${cont('atr')}   ·   Reservados: ${cont('res')}   ·   Devolvidos: ${cont('liv')}   ·   Cancelados: ${cont('canc')}`,L,y,{b:true,s:8.5}); y+=4;
+  const cols=[['EQUIPAMENTOS',84],['FUNCIONÁRIO',48],['SERVIÇO',16],['RETIRADA',24],['DEVOL. PREVISTA',26],['SITUAÇÃO',26],['ENCERRADO EM / POR',53]];
+  const head=()=>{ let x=L; doc.setFillColor(253,236,217); doc.rect(L,y,W,6,'F'); cols.forEach(([c,w])=>{ doc.rect(x,y,w,6); txt(c,x+1.2,y+4.1,{b:true,s:7.3}); x+=w; }); y+=6; };
+  head();
+  l.forEach(r=>{ const [c,t]=situacaoRet(r); doc.setFontSize(7.6);
+    const vals=[nomesRes(r)||r.nomes,r.funcionario,r.servico,dt(r.de),dt(r.ate),t.replace('⚠ ',''),enc(r)?(enc(r)+(r.encerradoPor?' · '+r.encerradoPor:'')):''];
+    const ls=vals.map((v,j)=>doc.splitTextToSize(String(v||''),cols[j][1]-2.4).slice(0,4)); const h=Math.max(6,Math.max(...ls.map(z=>z.length))*3.2+2.4);
+    if(y+h>200){ doc.addPage(); y=10; head(); }
+    if(c==='atr'){ doc.setFillColor(253,236,234); doc.rect(L,y,W,h,'F'); }
+    let x=L; cols.forEach(([n,w],j)=>{ doc.rect(x,y,w,h); doc.setFont('helvetica',j===5&&c==='atr'?'bold':'normal'); doc.setFontSize(7.6); if(j===5&&c==='atr') doc.setTextColor(192,57,43); doc.text(ls[j],x+1.2,y+3.9); doc.setTextColor(0,0,0); x+=w; }); y+=h; });
+  const n=doc.getNumberOfPages(); for(let i=1;i<=n;i++){ doc.setPage(i); txt(`Gerado pelo app VCP Vistoria · página ${i}/${n}`,148.5,205,{s:7,al:'center'}); }
+  doc.save(`VCP_Equipamentos_reservados_${hojeISO(new Date())}.pdf`); toast('PDF gerado',3000);
+  }catch(e){ toast('Erro ao gerar o PDF: '+e.message,5000); } };
 $('retFechar').onclick=()=>$('mRet').classList.remove('on');
 $('retBusca').addEventListener('input',pintaRetiradas);
 $('retFilt').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; retFiltro=b.dataset.retf; pintaRetiradas(); });
