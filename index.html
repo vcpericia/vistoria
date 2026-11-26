@@ -139,6 +139,18 @@ a.rota+a.rota{color:#0b8fb3}
 .hint.okH{color:var(--ok);font-weight:600}
 .item .acts a.rota,.rotaBts a.rota{display:inline-flex;align-items:center;gap:6px;color:#1A73E8}
 .item .acts a.rota+a.rota,.rotaBts a.rota+a.rota{color:#0b8fb3}
+input.pick{cursor:pointer;background-image:linear-gradient(45deg,transparent 50%,var(--sub) 50%),linear-gradient(135deg,var(--sub) 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:32px}
+.eqpSel{background:var(--fundo);border-radius:12px;padding:10px 12px;margin-top:10px;font-size:13.5px;line-height:1.6}
+.eqpSel i{color:var(--sub);font-style:normal}
+.eqpLista{max-height:44vh;overflow:auto;margin-top:8px;border:1px solid var(--borda);border-radius:12px}
+.eqpRow{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--borda)}
+.eqpRow:last-child{border-bottom:0}
+.eqpRow span{flex:1;font-size:14px;font-weight:600;min-width:0}
+.eqpRow button,.eqpOutro button{flex:0 0 auto;font-size:12px;font-weight:700;padding:7px 9px;border-radius:9px;border:1.5px solid var(--borda);background:#fff;color:var(--txt);white-space:nowrap}
+.eqpRow button.on{background:var(--laranja);border-color:var(--laranja);color:#fff}
+.eqpRow button[data-ec].on{background:#1D5FBF;border-color:#1D5FBF}
+.eqpRow.m,.eqpRow.c{background:#FFF7EE}
+.eqpOutro{display:flex;gap:6px;align-items:center}.eqpOutro input{flex:1;min-width:0}
 </style>
 
 <style>
@@ -327,6 +339,8 @@ input:focus,select:focus,textarea:focus{background-color:#1B222B}
 .modal:before{background-color:#1C2B3F}
 .modal h3{color:#E6EAF0}
 a.rota{background-color:#1B222B}
+.eqpRow button,.eqpOutro button{background-color:#1B222B}
+.eqpRow.m,.eqpRow.c{background-color:#3F2F1C}
 .rascBox b{color:#F5A04A}
 .campoErro{background-color:#3F211C !important}
 .foto{border:1.5px dashed #3A4451;background-color:#232B35}
@@ -442,9 +456,9 @@ a.rota{background-color:#1B222B}
   <div class="veicFixo" id="veicFixo"></div>
   <div class="resInfo" id="resInfo"></div>
   <label class="obr">Funcionário (motorista na saída)</label>
-  <input id="motorista" list="dlFunc" autocomplete="off" placeholder="Nome de quem vai dirigir">
-  <label>Acompanhante</label>
-  <input id="acompanhante" list="dlFunc" autocomplete="off" placeholder="Segundo funcionário (opcional)">
+  <input id="motorista" class="pick" readonly data-par="acompanhante" placeholder="Toque para escolher quem vai dirigir">
+  <label>Acompanhante (co-piloto)</label>
+  <input id="acompanhante" class="pick" readonly data-par="motorista" placeholder="Toque para escolher (opcional)">
   <datalist id="dlFunc"></datalist>
 </div>
 
@@ -722,8 +736,8 @@ a.rota{background-color:#1B222B}
   <label>Objetivo da viagem</label><textarea id="rsObj" placeholder="Ex.: Avaliação da fazenda São Francisco..."></textarea>
   <label>Equipamentos a levar <button class="lnk" id="rsEqBtn" style="float:right">📋 Escolher da lista</button></label><textarea id="rsEquip" placeholder="Ex.: Drone, GPS, trena"></textarea>
   <div id="rsEqBox" style="display:none"><input id="rsEqBusca" placeholder="Buscar equipamento…" style="margin-top:8px"><div class="eqPick" id="rsEqLista"></div><div class="eqSelInfo" id="rsEqInfo"></div></div>
-  <label>Motorista</label><input id="rsMoto" list="dlFunc">
-  <label>Acompanhante</label><input id="rsAcomp" list="dlFunc" placeholder="Opcional">
+  <label>Motorista</label><input id="rsMoto" class="pick" readonly data-par="rsAcomp" placeholder="Toque para escolher">
+  <label>Acompanhante (co-piloto)</label><input id="rsAcomp" class="pick" readonly data-par="rsMoto" placeholder="Toque para escolher (opcional)">
   <div class="hint">📅 A reserva vira um evento na agenda "Frota VCP" do veículo, no Google Agenda.</div>
   <div class="status" id="stRes"></div>
   <button class="btn" id="rsSalvar">Verificar e reservar</button>
@@ -737,6 +751,18 @@ a.rota{background-color:#1B222B}
   <div class="hint" id="rtLocal"></div>
   <div class="rotaBts" id="rtBts" style="margin-top:14px"></div>
   <button class="btn sec" id="rtFechar" style="margin-top:12px">Fechar</button>
+</div></div>
+
+<div class="modalBg" id="mEquipe" style="z-index:56"><div class="modal">
+  <h3>Equipe da viagem</h3>
+  <div class="hint" style="margin-top:2px">Marque quem vai dirigir e quem vai junto.</div>
+  <div class="eqpSel" id="eqpSel"></div>
+  <input id="eqpBusca" placeholder="Buscar funcionário…" autocomplete="off" style="margin-top:10px">
+  <div class="eqpLista" id="eqpLista"></div>
+  <label>Não está na lista? Digite o nome</label>
+  <div class="eqpOutro"><input id="eqpOutro" placeholder="Nome" autocomplete="off"><button data-om="1">🚗 Motorista</button><button data-oc="1">👤 Co-piloto</button></div>
+  <button class="btn" id="eqpOk" style="margin-top:14px">Confirmar</button>
+  <button class="btn sec" id="eqpCanc">Cancelar</button>
 </div></div>
 
 <!-- Modal nova previsão de volta -->
@@ -1556,6 +1582,35 @@ function kmRodados(){
   $('kmRod').textContent = (!isNaN(a)&&!isNaN(b)) ? (b>=a ? `Km rodados na viagem: ${fmtKm(b-a)} km` : '⚠ KM da volta menor que o KM da saída') : '';
   $('kmRod').classList.toggle('on',!!$('kmRod').textContent);
 }
+/* =================== escolher motorista e co-piloto =================== */
+let EQP={m:'',c:'',idM:'',idC:''};
+/** funcionários: aba Usuarios + quem já viajou + quem tem reserva; nomes incompletos da mesma pessoa viram um só (fica o mais completo) */
+function listaFunc(){ const I=INI||{}; const brutos=[...(I.funcionarios||[]),...(SESS?[SESS.usuario.nome]:[]),...(I.reservasEquip||[]).map(r=>r.funcionario),...(I.reservas||[]).flatMap(r=>[r.motorista,r.acompanhante])]
+    .map(n=>String(n||'').replace(/\s+/g,' ').trim()).filter(n=>n.length>2&&!/@/.test(n));
+  const out=[]; [...new Set(brutos)].sort((a,b)=>b.length-a.length).forEach(n=>{ if(!out.some(x=>mesmaPessoa(x,n))) out.push(n); });
+  return out.sort((a,b)=>a.localeCompare(b,'pt-BR')); }
+function abreEquipe(el){ const ehM=!el.id.match(/acomp/i); EQP.idM=ehM?el.id:el.dataset.par; EQP.idC=ehM?el.dataset.par:el.id;
+  EQP.m=$(EQP.idM).value.trim(); EQP.c=$(EQP.idC).value.trim(); $('eqpBusca').value=''; $('eqpOutro').value=''; pintaEquipe(); $('mEquipe').classList.add('on'); }
+function pintaEquipe(){
+  const q=String($('eqpBusca').value||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+  let l=listaFunc(); [EQP.m,EQP.c].forEach(n=>{ if(n&&!l.some(x=>mesmaPessoa(x,n)||x===n)) l.push(n); });
+  if(q) l=l.filter(n=>n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(q));
+  const ehM=n=>!!EQP.m&&(n===EQP.m||mesmaPessoa(n,EQP.m)), ehC=n=>!!EQP.c&&(n===EQP.c||mesmaPessoa(n,EQP.c));
+  l.sort((a,b)=>(ehM(b)*2+ehC(b))-(ehM(a)*2+ehC(a)));
+  $('eqpLista').innerHTML=l.length?l.map(n=>`<div class="eqpRow${ehM(n)?' m':''}${ehC(n)?' c':''}"><span>${esc(n)}</span><button data-em="${esc(n)}" class="${ehM(n)?'on':''}">🚗 Motorista</button><button data-ec="${esc(n)}" class="${ehC(n)?'on':''}">👤 Co-piloto</button></div>`).join('')
+    :'<div class="vazio">Ninguém com esse nome. Digite abaixo.</div>';
+  $('eqpSel').innerHTML=`<div><b>🚗 Motorista:</b> ${EQP.m?esc(EQP.m):'<i>ninguém marcado</i>'}</div><div><b>👤 Co-piloto:</b> ${EQP.c?esc(EQP.c):'<i>ninguém (opcional)</i>'}</div>`;
+}
+const marcaM=n=>{ EQP.m=EQP.m===n?'':n; if(EQP.m&&EQP.c===EQP.m) EQP.c=''; pintaEquipe(); };
+const marcaC=n=>{ EQP.c=EQP.c===n?'':n; if(EQP.c&&EQP.m===EQP.c) EQP.m=''; pintaEquipe(); };
+$('eqpLista').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; if(b.dataset.em!=null) marcaM(b.dataset.em); else if(b.dataset.ec!=null) marcaC(b.dataset.ec); });
+document.querySelector('.eqpOutro').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const n=$('eqpOutro').value.replace(/\s+/g,' ').trim();
+  if(n.length<3){ toast('Digite o nome completo.'); return; } $('eqpOutro').value=''; (b.dataset.om?marcaM:marcaC)(n); });
+$('eqpBusca').addEventListener('input',pintaEquipe);
+$('eqpCanc').onclick=()=>$('mEquipe').classList.remove('on');
+$('eqpOk').onclick=()=>{ [[EQP.idM,EQP.m],[EQP.idC,EQP.c]].forEach(([id,v])=>{ const el=$(id); if(el.value!==v){ el.value=v; el.dispatchEvent(new Event('input',{bubbles:true})); el.classList.remove('campoErro'); } });
+  $('mEquipe').classList.remove('on'); };
+document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.closest('input.pick'); if(el&&!el.disabled) abreEquipe(el); });
 function montaDatalist(){ const n=new Set([...(INI&&INI.funcionarios||[]),...(SESS?[SESS.usuario.nome]:[])]); $('dlFunc').innerHTML=[...n].map(x=>`<option value="${esc(x)}">`).join(''); }
 
 /* =================== motorista / trocas =================== */
