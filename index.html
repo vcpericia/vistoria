@@ -151,6 +151,13 @@ input.pick{cursor:pointer;background-image:linear-gradient(45deg,transparent 50%
 .eqpRow button[data-ec].on{background:#1D5FBF;border-color:#1D5FBF}
 .eqpRow.m,.eqpRow.c{background:#FFF7EE}
 .eqpOutro{display:flex;gap:6px;align-items:center}.eqpOutro input{flex:1;min-width:0}
+.retRes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0 4px}
+.retRes div{background:var(--fundo);border-radius:12px;padding:8px 4px;text-align:center}
+.retRes b{display:block;font-size:20px;font-weight:800;color:var(--escuro)}.retRes span{font-size:10.5px;color:var(--sub);font-weight:600}
+.retRes .alerta{background:#FDECEA}.retRes .alerta b{color:var(--erro)}
+.retI{border-left-color:#9aa3ae}.retI.uso{border-left-color:#EE7D07}.retI.atr{border-left-color:#C0392B;background:#FFF6F5}.retI.res{border-left-color:#1D5FBF}.retI.liv{border-left-color:#1E9E5A}
+.retI .acts{align-items:center}
+.eqSt.atr{background:#FDECEA;color:#C0392B}.eqSt.canc{background:#ECEEF1;color:#5B6573}
 </style>
 
 <style>
@@ -341,6 +348,12 @@ input:focus,select:focus,textarea:focus{background-color:#1B222B}
 a.rota{background-color:#1B222B}
 .eqpRow button,.eqpOutro button{background-color:#1B222B}
 .eqpRow.m,.eqpRow.c{background-color:#3F2F1C}
+.retRes b{color:#E6EAF0}
+.retRes .alerta{background-color:#3F201C}
+.retI{border-left-color:#3A4451}
+.retI.atr{background-color:#3F201C}
+.eqSt.atr{background-color:#3F201C;color:#FF8A7A}
+.eqSt.canc{background-color:#232B35;color:#AEB6C1}
 .rascBox b{color:#F5A04A}
 .campoErro{background-color:#3F211C !important}
 .foto{border:1.5px dashed #3A4451;background-color:#232B35}
@@ -585,7 +598,7 @@ a.rota{background-color:#1B222B}
 <!-- ================= PAINEL (ADMIN) ================= -->
 <div class="view" id="vEquip">
   <div class="card">
-    <h2><span class="n">🧰</span>Equipamentos<button class="btn peq soAdm" id="eqNovo" style="margin:0 0 0 auto">+ Novo</button></h2>
+    <h2><span class="n">🧰</span>Equipamentos<button class="btn peq sec soAdm" id="eqRetBtn" style="margin:0 6px 0 auto;white-space:nowrap">📋 Retiradas</button><button class="btn peq soAdm" id="eqNovo" style="margin:0">+ Novo</button></h2>
     <input id="eqBusca" placeholder="Buscar por nome, código ou nº de série">
     <div class="eqFilt" id="eqFilt"></div>
     <div id="eqLista"></div>
@@ -700,6 +713,16 @@ a.rota{background-color:#1B222B}
   <div class="status" id="stEqr"></div>
   <button class="btn" id="eqrSalvar">Reservar</button>
   <button class="btn sec" id="eqrCancelar">Cancelar</button>
+</div></div>
+
+<div class="modalBg" id="mRet"><div class="modal">
+  <h3><span class="n">📋</span>Retiradas de equipamentos</h3>
+  <div class="hint" style="margin-top:2px">Quem retirou cada equipamento, quando e se já devolveu (últimos 120 dias).</div>
+  <div class="retRes" id="retRes"></div>
+  <div class="eqFilt" id="retFilt"></div>
+  <input id="retBusca" placeholder="Buscar por equipamento, pessoa ou nº do serviço" autocomplete="off">
+  <div id="retLista" style="margin-top:8px"></div>
+  <button class="btn sec" id="retFechar" style="margin-top:12px">Fechar</button>
 </div></div>
 
 <div class="modalBg" id="mEqDet"><div class="modal">
@@ -2008,6 +2031,7 @@ function renderHome(){
   let h='';
   if(V) h+=`<div class="item" style="border-left-color:#1E9E5A"><div class="t">Continuar vistoria · ${esc(V.veiculo)}</div><div class="s">${V.status==='rascunho'?'Rascunho, saída ainda não confirmada':(pendente()?'Há alterações aguardando envio':'Aberta neste celular')} · saída ${brData(V.saida.data)} ${esc(V.saida.hora)}</div><div class="acts"><button id="btnCont">Abrir</button></div></div>`;
   if(FILA.length) h+=`<div class="item" style="border-left-color:#D64532"><div class="t">⏳ ${FILA.length===1?'1 viagem finalizada aguardando internet':FILA.length+' viagens finalizadas aguardando internet'}</div><div class="s">${FILA.map(x=>esc(x.v.veiculo)+' · volta '+brData(x.v.volta&&x.v.volta.data)+' '+esc((x.v.volta&&x.v.volta.hora)||'')).join('<br>')}<br>O PDF e o e-mail saem sozinhos quando voltar o sinal.</div></div>`;
+  { const at=(INI&&INI.eqAtrasados)||[]; if(u.admin&&at.length) h+=`<div class="item" style="border-left-color:#C0392B;background:#FFF6F5"><div class="t">⚠ ${at.length===1?'1 retirada de equipamento não devolvida':at.length+' retiradas de equipamento não devolvidas'}</div><div class="s">${at.slice(0,4).map(r=>esc(primeiro(r.funcionario))+': '+esc(nomesRes(r)||r.nomes)+' (prazo '+esc(fmtDH(r.ate))+')').join('<br>')}${at.length>4?'<br>…':''}</div><div class="acts"><button data-retver="atr">Ver retiradas</button></div></div>`; }
   if(ACQ.length) h+=`<div class="item" style="border-left-color:#D64532"><div class="t">⏳ ${ACQ.length===1?'1 ação aguardando internet':ACQ.length+' ações aguardando internet'}</div><div class="s">${ACQ.map(a=>esc(a.rot)).join('<br>')}<br>O app envia sozinho quando voltar o sinal.</div></div>`;
   for(const a of (INI&&INI.abertas||[]).filter(x=>x.atrasada)){
     const env=ehEu(a.motorista,a.motoristaAtual,a.acompanhanteAtual);
@@ -2630,6 +2654,7 @@ function pintaEqHome(){
 }
 document.addEventListener('click',async e=>{ const d=e.target.dataset||{};
   if(d.eqver) abreEquip();
+  if(d.retver) abreRetiradas(d.retver);
   if(d.eqenc){ const r=RESEQ().find(x=>x.id===d.eqenc); if(!r) return;
     if(!confirmar(d.canc?`Cancelar a reserva de: ${nomesRes(r)}?`:`Confirmar a devolução de: ${nomesRes(r)}?`)) return;
     try{ const x=await acaoOuFila('encerrarEquip',{id:d.eqenc,cancelar:!!d.canc,quando:agoraISO()},(d.canc?'Cancelamento: ':'Devolução: ')+nomesRes(r));
@@ -2649,6 +2674,45 @@ $('btnEqVer').onclick=abreEquip;
 $('eqBusca').addEventListener('input',pintaEquip);
 $('eqFilt').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; eqSetor=b.dataset.eqset; pintaEquip(); });
 $('eqLista').addEventListener('click',e=>{ const l=e.target.closest('[data-eqdet]'); if(l) abreEqDet(l.dataset.eqdet); });
+/* =================== retiradas (ADM) =================== */
+let RET=null, retFiltro='com';
+function situacaoRet(r){ const ag=agoraISO();
+  if(r.status==='DEVOLVIDA') return ['liv','Devolvido'];
+  if(r.status==='CANCELADA') return ['canc','Cancelada'];
+  if(r.ate<=ag) return ['atr','⚠ Não devolvido'];
+  if(r.de<=ag) return ['uso','Com '+primeiro(r.funcionario)];
+  return ['res','Reservado']; }
+async function abreRetiradas(filtro){ if(filtro) retFiltro=filtro; $('retBusca').value=''; $('mRet').classList.add('on'); pintaRetiradas();
+  try{ const r=await api('retiradas',{dias:120}); RET=r.retiradas||[]; pintaRetiradas(); }
+  catch(e){ if(!RET) $('retLista').innerHTML=`<div class="vazio">${semRede(e)?'Sem internet: abra de novo quando voltar o sinal.':'Erro: '+esc(e.message)}</div>`; } }
+function pintaRetiradas(){
+  if(!RET){ $('retLista').innerHTML='<div class="vazio">Carregando…</div>'; $('retRes').innerHTML=''; $('retFilt').innerHTML=''; return; }
+  const sit=r=>situacaoRet(r)[0]; const n=k=>RET.filter(r=>sit(r)===k).length;
+  const F=[['com','Com alguém agora',r=>sit(r)==='uso'||sit(r)==='atr'],['atr','Não devolvidos',r=>sit(r)==='atr'],['res','Próximas retiradas',r=>sit(r)==='res'],['dev','Devolvidos',r=>sit(r)==='liv'],['todos','Tudo',()=>true]];
+  $('retRes').innerHTML=`<div><b>${n('uso')+n('atr')}</b><span>com alguém</span></div><div class="${n('atr')?'alerta':''}"><b>${n('atr')}</b><span>não devolvidos</span></div><div><b>${n('res')}</b><span>reservados</span></div><div><b>${n('liv')}</b><span>devolvidos</span></div>`;
+  $('retFilt').innerHTML=F.map(([k,t])=>`<button data-retf="${k}" class="${k===retFiltro?'on':''}">${t}</button>`).join('');
+  const q=String($('retBusca').value||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+  const f=(F.find(x=>x[0]===retFiltro)||F[0])[2];
+  let l=RET.filter(f).filter(r=>!q||[nomesRes(r),r.nomes,r.funcionario,r.servico].join(' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(q));
+  if(retFiltro==='res') l=l.slice().reverse();
+  $('retLista').innerHTML=l.length?l.slice(0,150).map(r=>{ const [c,t]=situacaoRet(r);
+    return `<div class="item retI ${c}"><div class="t">${esc(nomesRes(r)||r.nomes)}</div>
+      <div class="s">👤 <b>${esc(r.funcionario||'?')}</b>${r.servico?' · serviço '+esc(r.servico):''}${r.reservaId?' · junto com o carro':''}</div>
+      <div class="s">📅 Retirada ${esc(fmtDH(r.de))} · devolução prevista ${esc(fmtDH(r.ate))}</div>
+      ${r.status==='DEVOLVIDA'||r.status==='CANCELADA'?`<div class="s">${r.status==='DEVOLVIDA'?'✔ Devolvido':'✖ Cancelada'}${r.encerradoEm?' em '+esc(r.encerradoEm):''}${r.encerradoPor?' · registrado por '+esc(r.encerradoPor):''}</div>`:''}
+      ${r.criadoPor?`<div class="s" style="font-size:11.5px">Reservado por ${esc(r.criadoPor)}${r.criadoEm?' em '+esc(r.criadoEm):''}</div>`:''}
+      <div class="acts"><span class="eqSt ${c}">${esc(t)}</span>${r.status==='RESERVADA'&&r.de<=agoraISO()?`<button data-retdev="${esc(r.id)}">Marcar como devolvido</button>`:''}</div></div>`; }).join('')
+    :'<div class="vazio">Nada aqui.</div>';
+}
+$('eqRetBtn').onclick=()=>abreRetiradas();
+$('retFechar').onclick=()=>$('mRet').classList.remove('on');
+$('retBusca').addEventListener('input',pintaRetiradas);
+$('retFilt').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; retFiltro=b.dataset.retf; pintaRetiradas(); });
+$('retLista').addEventListener('click',async e=>{ const b=e.target.closest('[data-retdev]'); if(!b) return; const r=RET.find(x=>x.id===b.dataset.retdev); if(!r) return;
+  if(!confirmar(`Registrar a devolução de: ${nomesRes(r)||r.nomes} (com ${r.funcionario})?`)) return;
+  try{ const x=await acaoOuFila('encerrarEquip',{id:r.id,quando:agoraISO()},'Devolução: '+(nomesRes(r)||r.nomes));
+    if(!x.fila){ r.status='DEVOLVIDA'; r.encerradoPor=SESS.usuario.nome; r.encerradoEm=fmtDH(agoraISO()); toast('Devolução registrada ✔'); carregaInicio().then(()=>{ if($('vHome').classList.contains('on')) renderHome(); }); }
+    pintaRetiradas(); }catch(err){ toast('Erro: '+err.message,4000); } });
 function abreEqDet(id){ const e=eqPorId(id); if(!e) return; const [c,t]=statusEq(e); const ag=agoraISO();
   $('eqdTit').textContent=e.nome; $('eqdRes').dataset.id=id; $('eqdEd').dataset.id=id;
   const prox=RESEQ().filter(r=>r.ids.includes(id)&&r.ate>ag).slice(0,5);
@@ -2656,6 +2720,9 @@ function abreEqDet(id){ const e=eqPorId(id); if(!e) return; const [c,t]=statusEq
     `<div style="margin-bottom:10px"><span class="eqSt ${c}">${esc(t)}</span></div><div class="kv">${[['Código VCP',e.codigo],['Setor',e.setor],['Nº de série',e.serie],['Aquisição',e.aquisicao]].filter(x=>x[1]).map(x=>`<span>${x[0]}</span><b>${esc(x[1])}</b>`).join('')}</div>`+
     (e.obs?`<div class="resInfo on" style="margin-top:10px">ℹ️ ${esc(e.obs)}</div>`:'')+
     (prox.length?`<h5 style="margin:14px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--sub)">Próximas reservas</h5>`+prox.map(r=>`<div class="s" style="font-size:13px;margin:3px 0">📅 ${esc(fmtDH(r.de))} → ${esc(fmtDH(r.ate))} · ${esc(r.funcionario)}${r.servico?' · '+esc(r.servico):''}</div>`).join(''):'');
+  if(SESS.usuario.admin){ const hist=(RET||[]).filter(r=>r.ids.includes(id)&&r.de<=ag).slice(0,8);
+    $('eqdCorpo').insertAdjacentHTML('beforeend',`<h5 style="margin:14px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--sub)">Quem retirou (ADM)</h5><div id="eqdHist">${hist.length?hist.map(r=>{ const [c,t]=situacaoRet(r); return `<div class="s" style="font-size:13px;margin:4px 0">👤 <b>${esc(r.funcionario)}</b> · ${esc(fmtDH(r.de))} → ${esc(fmtDH(r.ate))} <span class="eqSt ${c}" style="font-size:10.5px;padding:2px 7px">${esc(t)}</span></div>`; }).join(''):RET?'<div class="s">Nenhuma retirada nos últimos 120 dias.</div>':'<div class="s">Carregando…</div>'}</div>`);
+    if(!RET) api('retiradas',{dias:120}).then(r=>{ RET=r.retiradas||[]; if($('mEqDet').classList.contains('on')&&$('eqdRes').dataset.id===id) abreEqDet(id); }).catch(()=>{}); }
   $('eqdRes').style.display=e.situacao==='ATIVO'?'':'none'; $('mEqDet').classList.add('on'); carregaFotosEq($('eqdCorpo'));
 }
 $('eqdFechar').onclick=()=>$('mEqDet').classList.remove('on');
