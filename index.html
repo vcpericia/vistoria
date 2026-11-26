@@ -633,6 +633,13 @@ a.rota{background-color:#1B222B}
   <div class="card"><h2>Gasto com combustível por mês</h2><div class="leg" id="pLeg"></div><div id="grafico"><div class="tip" id="pTip"></div></div></div>
   <div class="card"><h2>Por veículo</h2><div class="tabWrap"><table class="tab" id="pVeicTab"></table></div></div>
   <div class="card"><h2>Abastecimentos</h2><div class="tabWrap"><table class="tab" id="pAbTab"></table></div><div class="maisAb" id="pAbMais"></div></div>
+  <div class="card" id="cEquipP">
+    <h2><span class="n">🧰</span>Equipamentos · retiradas</h2>
+    <div class="retRes" id="pEqRes"></div>
+    <div class="hint" id="pEqInfo" style="margin-top:6px"></div>
+    <button class="btn sec" id="pEqVer" style="margin-top:10px">📋 Ver quem retirou cada equipamento</button>
+    <div class="row" style="margin-top:8px"><button class="btn sec" id="pEqXls" style="margin:0">📊 Relatório Excel</button><button class="btn sec" id="pEqPdf" style="margin:0">📄 Relatório PDF</button></div>
+  </div>
   <div class="card" id="cMultas">
     <h2><span class="n">!</span>Multas · quem dirigia?</h2>
     <div class="hint" style="margin-top:-6px">Informe o veículo, a data e a hora da infração. O app procura a viagem e, pelas trocas de motorista, mostra quem estava ao volante.</div>
@@ -2406,7 +2413,7 @@ $('btnPainel').onclick=async()=>{
   document.body.classList.add('emForm'); $('resumoBar').style.display='none'; $('titulo').textContent='Painel de gastos'; mostra('vPainel');
   st($('stPainel'),'Carregando dados…','info');
   try{ PAINEL=await api('painel',{}); stOff($('stPainel'));
-    $('pVeic').innerHTML='<option value="">Todos</option>'+PAINEL.veiculos.map(v=>`<option>${esc(v)}</option>`).join(''); $('mVeic').innerHTML=PAINEL.veiculos.map(v=>`<option>${esc(v)}</option>`).join(''); pintaPainel(); pintaMultas(); }
+    $('pVeic').innerHTML='<option value="">Todos</option>'+PAINEL.veiculos.map(v=>`<option>${esc(v)}</option>`).join(''); $('mVeic').innerHTML=PAINEL.veiculos.map(v=>`<option>${esc(v)}</option>`).join(''); pintaPainel(); pintaMultas(); RET=null; pintaEqPainel(); }
   catch(e){ st($('stPainel'),semRede(e)?'Sem conexão: o painel precisa de internet.':e.message,'erro'); }
 };
 ['pPeriodo','pVeic'].forEach(id=>$(id).addEventListener('change',()=>{ PAB_N=10; PAINEL&&pintaPainel(); }));
@@ -2699,7 +2706,7 @@ function retFiltradas(){ if(!RET) return [];
   let l=RET.filter(f).filter(r=>!q||[nomesRes(r),r.nomes,r.funcionario,r.servico].join(' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(q))
     .filter(r=>(!de||r.ate.slice(0,10)>=de)&&(!ate||r.de.slice(0,10)<=ate));
   if(retFiltro==='res') l=l.slice().reverse(); return l; }
-async function retCarrega(){ const de=$('retDe').value; let dias=120; if(de){ dias=Math.max(120,Math.ceil((Date.now()-new Date(de+'T00:00').getTime())/864e5)+2); }
+async function retCarrega(dMin){ const de=$('retDe').value; let dias=Math.max(120,dMin||0); if(de){ dias=Math.max(dias,Math.ceil((Date.now()-new Date(de+'T00:00').getTime())/864e5)+2); } dias=Math.min(dias,730);
   if(RET&&RET._dias>=dias) return; const r=await api('retiradas',{dias}); RET=r.retiradas||[]; RET._dias=dias; }
 function pintaRetiradas(){
   if(!RET){ $('retLista').innerHTML='<div class="vazio">Carregando…</div>'; $('retRes').innerHTML=''; $('retFilt').innerHTML=''; return; }
@@ -2719,6 +2726,22 @@ function pintaRetiradas(){
     :'<div class="vazio">Nada aqui.</div>';
 }
 $('eqRetBtn').onclick=()=>abreRetiradas();
+/* --- no painel dos administradores: mesmo controle, usando o período do painel --- */
+function perPainelEq(){ const p=$('pPeriodo').value, [ini,fim]=intervalo(p); const de=p==='tudo'?new Date(Date.now()-729*864e5):ini;
+  return {de:hojeISO(de),ate:hojeISO(new Date(fim-864e5)),dias:Math.ceil((Date.now()-de.getTime())/864e5)+2,txt:$('pPeriodo').options[$('pPeriodo').selectedIndex].text}; }
+async function pintaEqPainel(){ const el=$('pEqRes'); if(!el) return; const P=perPainelEq();
+  if(!RET||(RET._dias||0)<Math.min(P.dias,730)){ el.innerHTML=''; $('pEqInfo').textContent='Carregando retiradas…'; try{ await retCarrega(P.dias); }catch(e){ $('pEqInfo').textContent=semRede(e)?'Sem internet.':'Erro: '+e.message; return; } }
+  const sit=r=>situacaoRet(r)[0]; const n=k=>RET.filter(r=>sit(r)===k).length;
+  const noPer=RET.filter(r=>r.ate.slice(0,10)>=P.de&&r.de.slice(0,10)<=P.ate&&r.status!=='CANCELADA');
+  el.innerHTML=`<div><b>${n('uso')+n('atr')}</b><span>com alguém agora</span></div><div class="${n('atr')?'alerta':''}"><b>${n('atr')}</b><span>não devolvidos</span></div><div><b>${n('res')}</b><span>reservados</span></div><div><b>${noPer.length}</b><span>retiradas no período</span></div>`;
+  $('pEqInfo').textContent=`Período do painel: ${P.txt} · ${noPer.reduce((a,r)=>a+r.ids.length,0)} equipamento(s) retirados por ${new Set(noPer.map(r=>r.funcionario)).size} pessoa(s). Os relatórios usam esse período.`; }
+async function relEqPainel(tipo){ const P=perPainelEq(); retFiltro='todos'; $('retBusca').value=''; $('retDe').value=P.de; $('retAte').value=P.ate;
+  try{ await retCarrega(P.dias); }catch(e){ toast(semRede(e)?'Sem internet: o relatório precisa de conexão.':'Erro: '+e.message,4000); return; }
+  (tipo==='pdf'?$('retPdf'):$('retXls')).onclick(); }
+$('pEqVer').onclick=()=>abreRetiradas('com');
+$('pEqXls').onclick=()=>relEqPainel('xls');
+$('pEqPdf').onclick=()=>relEqPainel('pdf');
+$('pPeriodo').addEventListener('change',()=>{ if($('vPainel').classList.contains('on')) pintaEqPainel(); });
 ['retDe','retAte'].forEach(id=>$(id).addEventListener('change',async()=>{ try{ await retCarrega(); }catch(e){} pintaRetiradas(); }));
 /** linhas do relatório: uma por retirada e uma por equipamento */
 function retRelDados(){ const l=retFiltradas(); const dh=s=>s?fmtDH(s).replace(/^(\d\d\/\d\d)/,m=>m)+'':'';
